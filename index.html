@@ -36,22 +36,17 @@
       height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
-      min-height: 0;
     }
 
     header {
-      flex: 0 0 auto;
       padding: 12px 14px 10px;
       background: var(--header-bg);
       color: white;
-      z-index: 1000;
     }
 
     header h1 {
       margin: 0;
       font-size: 18px;
-      line-height: 1.25;
-      padding-top: 2px;
     }
 
     header p {
@@ -61,19 +56,15 @@
     }
 
     .controls {
-      flex: 0 0 auto;
       display: flex;
       gap: 6px;
       padding: 8px;
       overflow-x: auto;
       background: white;
       border-bottom: 1px solid #ddd;
-      -webkit-overflow-scrolling: touch;
     }
 
-    .controls::-webkit-scrollbar {
-      display: none;
-    }
+    .controls::-webkit-scrollbar { display: none; }
 
     button {
       border: none;
@@ -84,576 +75,150 @@
       font-size: 12px;
       white-space: nowrap;
       cursor: pointer;
-      flex-shrink: 0;
     }
 
     button.secondary { background: var(--dark); }
     button.home { background: var(--red); }
     button.share { background: var(--green); }
 
-    #trafficPanel {
-      flex: 0 0 auto;
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
-      padding: 8px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .traffic-card {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 7px 8px;
-      min-width: 0;
-    }
-
-    .traffic-title {
-      font-size: 11px;
-      color: #374151;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .traffic-time {
-      font-size: 16px;
-      font-weight: bold;
-      color: #111827;
-      margin-top: 2px;
-    }
-
-    .traffic-meta {
-      font-size: 10px;
-      color: #6b7280;
-      margin-top: 2px;
-    }
-
     #status {
-      flex: 0 0 auto;
       padding: 7px 10px;
       font-size: 12px;
       background: var(--orange-bg);
       color: var(--orange-text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     #map {
-      flex: 1 1 auto;
-      min-height: 0;
+      flex: 1;
       width: 100%;
     }
 
     .home-marker { font-size: 30px; }
     .food-marker, .mall-marker, .attraction-marker, .massage-marker, .cat-marker, .durian-marker {
       font-size: 25px;
-      text-align: center;
-      line-height: 30px;
-    }
-
-    .leaflet-popup-content {
-      font-size: 14px;
-      line-height: 1.4;
-      min-width: 190px;
-    }
-
-    .popup-title {
-      font-size: 15px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .popup-note {
-      margin-bottom: 6px;
-    }
-
-    .popup-small {
-      font-size: 12px;
-      color: #555;
-      margin-bottom: 8px;
-    }
-
-    .popup-actions {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-    }
-
-    .popup-actions a {
-      display: inline-block;
-      padding: 7px 9px;
-      border-radius: 999px;
-      background: var(--blue);
-      color: white;
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .popup-actions a.search {
-      background: var(--dark);
-    }
-
-    @media (max-width: 480px) {
-      header {
-        padding: 12px 12px 9px;
-      }
-
-      header h1 {
-        font-size: 17px;
-      }
-
-      header p {
-        font-size: 11px;
-      }
-
-      .controls {
-        padding: 7px;
-      }
-
-      button {
-        font-size: 12px;
-        padding: 8px 9px;
-      }
-
-      #trafficPanel {
-        grid-template-columns: 1fr 1fr;
-        padding: 6px;
-        gap: 5px;
-      }
-
-      .traffic-card {
-        padding: 6px 7px;
-      }
-
-      .traffic-title {
-        font-size: 10px;
-      }
-
-      .traffic-time {
-        font-size: 15px;
-      }
-
-      .traffic-meta {
-        font-size: 9px;
-      }
     }
   </style>
 </head>
 
 <body>
 <div id="app">
+
   <header>
     <h1>PHUKET ARANG</h1>
-    <p>Urban Nook + food, malls, massage, cats, durian & checkpoint timing</p>
+    <p>Urban Nook + food, malls, massage, cats & durian</p>
   </header>
 
   <div class="controls">
     <button onclick="findMe()">📍 Me</button>
     <button class="share" onclick="shareMyLocation()">🔗 Share</button>
-    <button class="home" onclick="goHome()">🏠 UrbanNook</button>
-    <button onclick="refreshTraffic()">🚗 Checkpoint</button>
+    <button class="home" onclick="goHome()">🏠 Home</button>
+
+    <!-- ✅ ONE TAP CHECKPOINT -->
+    <button onclick="openCheckpoint()">🚗 Checkpoint</button>
+
     <button class="secondary" onclick="filterMarkers('all')">All</button>
-    <button class="secondary" onclick="filterMarkers('food')">🍜 Food</button>
-    <button class="secondary" onclick="filterMarkers('mall')">🛍️ Malls</button>
-    <button class="secondary" onclick="filterMarkers('massage')">💆 Massage</button>
-    <button class="secondary" onclick="filterMarkers('cat')">🐱 Cats</button>
-    <button class="secondary" onclick="filterMarkers('durian')">🍈 Durian</button>
-    <button class="secondary" onclick="filterMarkers('attraction')">📸 Sights</button>
+    <button class="secondary" onclick="filterMarkers('food')">🍜</button>
+    <button class="secondary" onclick="filterMarkers('mall')">🛍️</button>
+    <button class="secondary" onclick="filterMarkers('massage')">💆</button>
+    <button class="secondary" onclick="filterMarkers('cat')">🐱</button>
+    <button class="secondary" onclick="filterMarkers('durian')">🍈</button>
   </div>
 
-  <div id="trafficPanel">
-    <div class="traffic-card">
-      <div class="traffic-title">Woodlands SG → JB</div>
-      <div class="traffic-time" id="wlSgJb">--</div>
-      <div class="traffic-meta" id="wlSgJbMeta">Tap Checkpoint</div>
-    </div>
-    <div class="traffic-card">
-      <div class="traffic-title">Woodlands JB → SG</div>
-      <div class="traffic-time" id="wlJbSg">--</div>
-      <div class="traffic-meta" id="wlJbSgMeta">Tap Checkpoint</div>
-    </div>
-    <div class="traffic-card">
-      <div class="traffic-title">Tuas SG → JB</div>
-      <div class="traffic-time" id="tuasSgJb">--</div>
-      <div class="traffic-meta" id="tuasSgJbMeta">Tap Checkpoint</div>
-    </div>
-    <div class="traffic-card">
-      <div class="traffic-title">Tuas JB → SG</div>
-      <div class="traffic-time" id="tuasJbSg">--</div>
-      <div class="traffic-meta" id="tuasJbSgMeta">Tap Checkpoint</div>
-    </div>
-  </div>
-
-  <div id="status">Map centred near The Urban Nook.</div>
+  <div id="status">Ready.</div>
   <div id="map"></div>
+
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  const urbanNook = {
-    name: "The Urban Nook",
-    type: "home",
-    lat: 1.4848,
-    lng: 103.7666,
-    address: "14, Jalan Rentaka 2, Taman Sri Tebrau, 80050 Johor Bahru",
-    note: "Group accommodation"
-  };
 
-  const map = L.map("map", {
-    zoomControl: true,
-    tap: true
-  }).setView([urbanNook.lat, urbanNook.lng], 15);
+const urbanNook = { lat: 1.4848, lng: 103.7666 };
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-  }).addTo(map);
+const map = L.map("map").setView([urbanNook.lat, urbanNook.lng], 15);
 
-  setTimeout(() => map.invalidateSize(), 300);
+L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+  maxZoom: 19
+}).addTo(map);
 
-  let userMarker = null;
-  let userCircle = null;
-  let lastUserLocation = null;
+// Icons
+const homeIcon = L.divIcon({ html: "🏠", className: "home-marker" });
+const foodIcon = L.divIcon({ html: "🍜", className: "food-marker" });
+const mallIcon = L.divIcon({ html: "🛍️", className: "mall-marker" });
+const massageIcon = L.divIcon({ html: "💆", className: "massage-marker" });
+const catIcon = L.divIcon({ html: "🐱", className: "cat-marker" });
+const durianIcon = L.divIcon({ html: "🍈", className: "durian-marker" });
 
-  const homeIcon = L.divIcon({ html: "🏠", className: "home-marker", iconSize: [34,34], iconAnchor: [17,17] });
-  const foodIcon = L.divIcon({ html: "🍜", className: "food-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const mallIcon = L.divIcon({ html: "🛍️", className: "mall-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const attractionIcon = L.divIcon({ html: "📸", className: "attraction-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const massageIcon = L.divIcon({ html: "💆", className: "massage-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const catIcon = L.divIcon({ html: "🐱", className: "cat-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const durianIcon = L.divIcon({ html: "🍈", className: "durian-marker", iconSize: [30,30], iconAnchor: [15,15] });
+function getIcon(type) {
+  return { food: foodIcon, mall: mallIcon, massage: massageIcon, cat: catIcon, durian: durianIcon }[type];
+}
 
-  function getIcon(type) {
-    if (type === "food") return foodIcon;
-    if (type === "mall") return mallIcon;
-    if (type === "massage") return massageIcon;
-    if (type === "cat") return catIcon;
-    if (type === "durian") return durianIcon;
-    if (type === "attraction") return attractionIcon;
-    return foodIcon;
-  }
+// Map data (kept minimal)
+const places = [
+  {name:"KSL City Mall",type:"mall",lat:1.4852,lng:103.7622},
+  {name:"Mid Valley Southkey",type:"mall",lat:1.5008,lng:103.7778},
+  {name:"Teck Sing",type:"food",lat:1.4871,lng:103.7662},
+  {name:"Ah Tong Durian",type:"durian",lat:1.4860,lng:103.7610},
+  {name:"CATS Cafe",type:"cat",lat:1.4649,lng:103.7525},
+  {name:"KSL Massage Cluster",type:"massage",lat:1.4852,lng:103.7622}
+];
 
-  function googleMapsSearch(place) {
-    const query = encodeURIComponent(`${place.name} ${place.address || ""}`);
-    return `https://www.google.com/maps/search/?api=1&query=${query}`;
-  }
+const layer = L.layerGroup().addTo(map);
+const markers = [];
 
-  function googleMapsDirections(place) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=driving`;
-  }
+places.forEach(p=>{
+  const m = L.marker([p.lat,p.lng],{icon:getIcon(p.type)})
+    .bindPopup(`<b>${p.name}</b>`);
+  m.type = p.type;
+  markers.push(m);
+  layer.addLayer(m);
+});
 
-  function googleMapsLocationLink(lat, lng) {
-    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-  }
-
-  function distanceFromHome(lat, lng) {
-    const R = 6371;
-    const dLat = (lat - urbanNook.lat) * Math.PI / 180;
-    const dLng = (lng - urbanNook.lng) * Math.PI / 180;
-
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(urbanNook.lat * Math.PI / 180) *
-      Math.cos(lat * Math.PI / 180) *
-      Math.sin(dLng / 2) ** 2;
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-
-    if (distance < 1) return `${Math.round(distance * 1000)}m from Urban Nook`;
-    return `${distance.toFixed(1)}km from Urban Nook`;
-  }
-
-  function popupHtml(place) {
-    return `
-      <div class="popup-title">${place.name}</div>
-      <div class="popup-note">${place.note}</div>
-      <strong>${distanceFromHome(place.lat, place.lng)}</strong><br><br>
-      <div class="popup-small">${place.address}</div>
-      <div class="popup-actions">
-        <a href="${googleMapsDirections(place)}" target="_blank">Directions</a>
-        <a class="search" href="${googleMapsSearch(place)}" target="_blank">Maps</a>
-      </div>
-    `;
-  }
-
-  const homeMarker = L.marker([urbanNook.lat, urbanNook.lng], { icon: homeIcon }).addTo(map);
-
-  homeMarker.bindPopup(`
-    <div class="popup-title">🏠 ${urbanNook.name}</div>
-    <div class="popup-note">${urbanNook.note}</div>
-    <div class="popup-small">${urbanNook.address}</div>
-    <div class="popup-actions">
-      <a href="${googleMapsDirections(urbanNook)}" target="_blank">Directions</a>
-      <a class="search" href="${googleMapsSearch(urbanNook)}" target="_blank">Maps</a>
-    </div>
-  `).openPopup();
-
-  L.circle([urbanNook.lat, urbanNook.lng], {
-    radius: 1200,
-    color: "#dc2626",
-    fillColor: "#dc2626",
-    fillOpacity: 0.08
-  }).addTo(map);
-
-  const places = [
-    { name: "Seng Steam Fish Restaurant", type: "food", lat: 1.487916, lng: 103.774656, address: "100, Jalan Keris, Taman Sri Tebrau, 80050 Johor Bahru", note: "Near house · dine-in / takeaway · steamed fish" },
-    { name: "Sek Wai Sin JB Pelangi", type: "food", lat: 1.4833, lng: 103.7749, address: "205, Jalan Sri Pelangi, Taman Pelangi, 80400 Johor Bahru", note: "Near house · dine-in / takeaway · seafood noodle" },
-    { name: "Farmland Porridge Steamboat", type: "food", lat: 1.4860, lng: 103.7650, address: "15, Jalan Badik 1, Taman Sri Tebrau, 80050 Johor Bahru", note: "Sri Tebrau · dine-in · porridge steamboat" },
-    { name: "Hai Kee Seafood Restaurant", type: "food", lat: 1.4863, lng: 103.7653, address: "No. 21, Jalan Badik 1, Taman Sri Tebrau, 80050 Johor Bahru", note: "Sri Tebrau hawker centre · dine-in / takeaway" },
-    { name: "Project Smoked", type: "food", lat: 1.4872, lng: 103.7667, address: "224, Jalan Sutera, Taman Sentosa, 80150 Johor Bahru", note: "American BBQ · dine-in / takeaway" },
-    { name: "Restoran Pekin Taman Sentosa", type: "food", lat: 1.4929, lng: 103.7758, address: "38, Jalan Baldu 5, Taman Sentosa, 80150 Johor Bahru", note: "Chinese restaurant · suckling pig" },
-    { name: "Teck Sing Restaurant", type: "food", lat: 1.4871, lng: 103.7662, address: "3 & 5, Jalan Sutera Satu, Taman Sentosa, 80150 Johor Bahru", note: "Paper-baked herbal chicken" },
-    { name: "Kam Long Ah Zai Curry Fish Head", type: "food", lat: 1.4596, lng: 103.7643, address: "74, Jalan Wong Ah Fook, 80000 Johor Bahru", note: "Famous curry fish head" },
-    { name: "Canton-i @ Johor Bahru City Square", type: "food", lat: 1.4626, lng: 103.7634, address: "Lot J3-05, Level 3, Johor Bahru City Square", note: "Hong Kong cuisine" },
-    { name: "Bottega JB", type: "food", lat: 1.4816, lng: 103.7660, address: "8, Jalan Meranti, Johor Bahru, 80250", note: "Italian cuisine" },
-    { name: "Warakuya Japanese Restaurant", type: "food", lat: 1.4818, lng: 103.7735, address: "43, Jalan Kuning 2, Taman Pelangi, 80400 Johor Bahru", note: "Japanese food" },
-    { name: "Me & My RoRo", type: "food", lat: 1.4822, lng: 103.7722, address: "7, Jalan Kuning 1, Taman Pelangi, 80400 Johor Bahru", note: "Japanese handroll & tapas bar" },
-    { name: "Restoran Ban Heong Seng", type: "food", lat: 1.536913, lng: 103.674204, address: "113, Jalan Impian Emas 22, Taman Impian Emas, 81300 Skudai", note: "Clay-baked beggar chicken & duck" },
-    { name: "Restoran Pekin Johor Jaya", type: "food", lat: 1.52387, lng: 103.80706, address: "1, Jalan Masai Baru, Taman Johor Jaya, 81100 Johor Bahru", note: "Chinese restaurant" },
-    { name: "Ba Jiu Men Hotpot", type: "food", lat: 1.5585, lng: 103.7825, address: "Block B, G10, Jalan Jaya Putra 1/1, Bandar Jaya Putra", note: "Hotpot" },
-
-    { name: "KSL City Mall", type: "mall", lat: 1.4852, lng: 103.7622, address: "33, Jalan Seladang, Taman Abad, 80250 Johor Bahru", note: "Very near house · food, shopping, massage" },
-    { name: "The Mall, Mid Valley Southkey", type: "mall", lat: 1.5008, lng: 103.7778, address: "1, Persiaran Southkey 1, Southkey, 80150 Johor Bahru", note: "Large mall · good for group shopping and food" },
-    { name: "Plaza Pelangi", type: "mall", lat: 1.4817, lng: 103.7745, address: "Jalan Kuning, Taman Pelangi, Johor Bahru", note: "Nearby mall" },
-    { name: "JB City Square", type: "mall", lat: 1.4626, lng: 103.7634, address: "106-108, Jalan Wong Ah Fook, 80000 Johor Bahru", note: "Near checkpoint / JB Sentral" },
-
-    { name: "BKK Thai Spa @ KSL City Mall", type: "massage", lat: 1.4852, lng: 103.7622, address: "LG-001, KSL City Mall, 33 Jalan Seladang, Taman Abad", note: "Massage option inside KSL City Mall" },
-    { name: "Lotus Wellness Spa @ KSL City", type: "massage", lat: 1.4852, lng: 103.7622, address: "KSL City Mall, 33 Jalan Seladang, Taman Abad", note: "Massage / wellness spa in KSL area" },
-    { name: "Hanoi 9 Spa @ KSL City", type: "massage", lat: 1.4852, lng: 103.7622, address: "Level 6 Car Park Area, KSL City Mall, Jalan Seladang", note: "Massage option at KSL City Mall" },
-    { name: "SQ Massage & Nails @ KSL", type: "massage", lat: 1.4852, lng: 103.7622, address: "Level 2-01A, KSL City Mall, Johor Bahru", note: "Massage and nails at KSL" },
-    { name: "Bangkok Spa Taman Pelangi", type: "massage", lat: 1.4816, lng: 103.7726, address: "Taman Pelangi, Johor Bahru", note: "Massage option near Pelangi" },
-    { name: "Thai Odyssey @ Mid Valley Southkey", type: "massage", lat: 1.5008, lng: 103.7778, address: "The Mall, Mid Valley Southkey, Johor Bahru", note: "Massage option inside Mid Valley Southkey" },
-    { name: "Family Thai Spa Taman Sentosa", type: "massage", lat: 1.4910, lng: 103.7712, address: "Taman Sentosa, Johor Bahru", note: "Massage option around Taman Sentosa" },
-    { name: "Walea Spa & Retreat", type: "massage", lat: 1.4918, lng: 103.7750, address: "Taman Sentosa / Southkey area, Johor Bahru", note: "Spa / massage option near Southkey area" },
-
-    { name: "C.A.T.S Cafe Johor Bahru", type: "cat", lat: 1.4649, lng: 103.7525, address: "31A, Jalan Abdul Samad, Lorong 2C, 80100 Johor Bahru", note: "Cat cafe" },
-    { name: "Meow Me Cat House", type: "cat", lat: 1.5583, lng: 103.7818, address: "28-01, Jalan Austin Height 7/7, Taman Mount Austin, 81100 Johor Bahru", note: "Cat cafe / cat house in Mount Austin" },
-    { name: "Chucky Cat Cafe @ Komtar JBCC", type: "cat", lat: 1.4634, lng: 103.7621, address: "Komtar JBCC, Johor Bahru", note: "Cat cafe branch near City Square" },
-    { name: "KopiCat Cafe", type: "cat", lat: 1.4925, lng: 103.7760, address: "Southkey / Taman Sentosa area, Johor Bahru", note: "Cat-themed cafe option" },
-    { name: "Neko Cat Cafe Mount Austin", type: "cat", lat: 1.5590, lng: 103.7810, address: "Mount Austin, Johor Bahru", note: "Cat cafe option in Mount Austin" },
-
-    { name: "Ah Tong Durian", type: "durian", lat: 1.4860, lng: 103.7610, address: "34, 2, Jalan Serigala, Taman Abad, 80250 Johor Bahru", note: "Durian near KSL / Taman Abad · seasonal availability" },
-    { name: "JS Deluxe Durian", type: "durian", lat: 1.4853, lng: 103.7620, address: "32, Jalan Seladang, Taman Abad, 80250 Johor Bahru", note: "Durian near KSL area" },
-    { name: "KSL Durian Shops", type: "durian", lat: 1.4852, lng: 103.7622, address: "KSL City Mall area, 33 Jalan Seladang, Taman Abad, 80250 Johor Bahru", note: "Durian stalls around KSL area · check current opening" },
-    { name: "Taman Pelangi Durian Area", type: "durian", lat: 1.4835, lng: 103.7740, address: "Taman Pelangi, Johor Bahru", note: "General durian area / seasonal stalls · verify before going" },
-    { name: "Machap King Durian", type: "durian", lat: 1.5220, lng: 103.7905, address: "37, Jalan Molek 2/1, Taman Molek, 81100 Johor Bahru", note: "Further out · durian option in Taman Molek" },
-
-    { name: "Jalan Tan Hiok Nee", type: "attraction", lat: 1.4569, lng: 103.7615, address: "Jalan Tan Hiok Nee, Bandar Johor Bahru", note: "Heritage street, cafes, photo spots" },
-    { name: "Johor Old Chinese Temple", type: "attraction", lat: 1.4595, lng: 103.7631, address: "Lot 653, Jalan Trus, Bandar Johor Bahru", note: "Historic temple near City Square" }
-  ];
-
-  const markerLayer = L.layerGroup().addTo(map);
-  const allMarkers = [];
-
-  places.forEach(place => {
-    const marker = L.marker([place.lat, place.lng], { icon: getIcon(place.type) });
-    marker.bindPopup(popupHtml(place));
-    marker.placeType = place.type;
-    allMarkers.push(marker);
-    markerLayer.addLayer(marker);
+function filterMarkers(type){
+  layer.clearLayers();
+  markers.forEach(m=>{
+    if(type==="all"||m.type===type){
+      layer.addLayer(m);
+    }
   });
+}
 
-  function filterMarkers(type) {
-    markerLayer.clearLayers();
+// Home
+L.marker([urbanNook.lat,urbanNook.lng],{icon:homeIcon}).addTo(map);
 
-    allMarkers.forEach(marker => {
-      if (type === "all" || marker.placeType === type) {
-        markerLayer.addLayer(marker);
-      }
-    });
+function goHome(){
+  map.setView([urbanNook.lat,urbanNook.lng],16);
+}
 
-    document.getElementById("status").textContent =
-      type === "all" ? "Showing all places." : `Showing ${type} places.`;
+// GPS
+function findMe(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude,longitude}=pos.coords;
+    L.marker([latitude,longitude]).addTo(map)
+      .bindPopup("📍 You are here").openPopup();
+    map.setView([latitude,longitude],16);
+  });
+}
 
-    setTimeout(() => map.invalidateSize(), 100);
-  }
+// Share
+function shareMyLocation(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude,longitude}=pos.coords;
+    const link = `https://www.google.com/maps?q=${latitude},${longitude}`;
 
-  function goHome() {
-    map.setView([urbanNook.lat, urbanNook.lng], 16);
-    homeMarker.openPopup();
-    document.getElementById("status").textContent = "Centred on Urban Nook.";
-  }
-
-  function handleGeoError(error) {
-    let message = "Location failed.";
-
-    if (error.code === 1) {
-      message = "Location permission denied. Allow location access for this website.";
-    } else if (error.code === 2) {
-      message = "Location unavailable. Turn on GPS/location services.";
-    } else if (error.code === 3) {
-      message = "Location timed out. Try again outdoors or near a window.";
-    }
-
-    alert(message);
-    document.getElementById("status").textContent = message;
-  }
-
-  function findMe() {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by this browser.");
-      return;
-    }
-
-    document.getElementById("status").textContent = "Finding your current location...";
-
-    navigator.geolocation.getCurrentPosition(pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const acc = pos.coords.accuracy;
-
-      lastUserLocation = { lat, lng };
-
-      map.setView([lat, lng], 16);
-
-      if (userMarker) map.removeLayer(userMarker);
-      if (userCircle) map.removeLayer(userCircle);
-
-      const shareLink = googleMapsLocationLink(lat, lng);
-
-      userMarker = L.marker([lat, lng]).addTo(map)
-        .bindPopup(`
-          <div class="popup-title">📍 You are here</div>
-          Accuracy: about ${Math.round(acc)}m<br><br>
-          <div class="popup-actions">
-            <a href="${shareLink}" target="_blank">Open</a>
-            <a class="search" href="#" onclick="copyText('${shareLink}'); return false;">Copy Link</a>
-          </div>
-        `)
-        .openPopup();
-
-      userCircle = L.circle([lat, lng], {
-        radius: acc,
-        color: "#2563eb",
-        fillColor: "#2563eb",
-        fillOpacity: 0.08
-      }).addTo(map);
-
-      document.getElementById("status").textContent =
-        `Location found · ${Math.round(acc)}m accuracy.`;
-    }, handleGeoError, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    });
-  }
-
-  function shareMyLocation() {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by this browser.");
-      return;
-    }
-
-    document.getElementById("status").textContent = "Getting shareable location link...";
-
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const link = googleMapsLocationLink(lat, lng);
-
-      lastUserLocation = { lat, lng };
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: "My current location",
-            text: "Here is my current location:",
-            url: link
-          });
-          document.getElementById("status").textContent = "Location shared.";
-        } catch (err) {
-          copyText(link);
-        }
-      } else {
-        copyText(link);
-      }
-    }, handleGeoError, {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    });
-  }
-
-  function copyText(text) {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => {
-        document.getElementById("status").textContent = "Location link copied.";
-        alert("Location link copied.");
-      });
+    if (navigator.share) {
+      navigator.share({ title: "My location", url: link });
     } else {
-      prompt("Copy this link:", text);
+      prompt("Copy this:", link);
     }
-  }
+  });
+}
 
-  async function refreshTraffic() {
-    const sourceUrl = "https://www.woodlandscheckpoint.com/";
-    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(sourceUrl);
+// ✅ ONE TAP CHECKPOINT FUNCTION
+function openCheckpoint(){
+  window.open("https://www.woodlandscheckpoint.com/", "_blank");
+}
 
-    document.getElementById("status").textContent = "Fetching checkpoint timings...";
-
-    try {
-      const response = await fetch(proxyUrl, { cache: "no-store" });
-      if (!response.ok) throw new Error("Traffic fetch failed");
-
-      const html = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      const text = doc.body.innerText.replace(/\s+/g, " ");
-
-      const data = {
-        wlSgJb: extractTiming(text, "SG to JB via Woodlands"),
-        wlJbSg: extractTiming(text, "JB to SG via Woodlands"),
-        tuasSgJb: extractTiming(text, "SG to JB via Tuas"),
-        tuasJbSg: extractTiming(text, "JB to SG via Tuas")
-      };
-
-      updateTrafficCard("wlSgJb", data.wlSgJb);
-      updateTrafficCard("wlJbSg", data.wlJbSg);
-      updateTrafficCard("tuasSgJb", data.tuasSgJb);
-      updateTrafficCard("tuasJbSg", data.tuasJbSg);
-
-      const now = new Date();
-      document.getElementById("status").textContent =
-        "Checkpoint timings updated " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-    } catch (err) {
-      document.getElementById("status").innerHTML =
-        `Live checkpoint fetch blocked. <a href="${sourceUrl}" target="_blank">Open checkpoint site</a>.`;
-    }
-  }
-
-  function extractTiming(text, label) {
-    const index = text.indexOf(label);
-    if (index === -1) return null;
-
-    const snippet = text.slice(index, index + 120);
-    const match = snippet.match(/(\d+)\s*min/i);
-
-    if (!match) return null;
-    return match[1] + " min";
-  }
-
-  function updateTrafficCard(id, value) {
-    const timeEl = document.getElementById(id);
-    const metaEl = document.getElementById(id + "Meta");
-
-    if (value) {
-      timeEl.textContent = value;
-      metaEl.textContent = "Live estimate";
-    } else {
-      timeEl.textContent = "--";
-      metaEl.textContent = "Unavailable";
-    }
-  }
-
-  refreshTraffic();
 </script>
 </body>
 </html>
