@@ -91,45 +91,6 @@
     button.home { background: var(--red); }
     button.share { background: var(--green); }
 
-    #trafficPanel {
-      flex: 0 0 auto;
-      background: #ffffff;
-      border-bottom: 1px solid #e5e7eb;
-      padding: 8px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .traffic-card {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 7px 8px;
-      min-width: 0;
-    }
-
-    .traffic-title {
-      font-size: 11px;
-      color: #374151;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .traffic-time {
-      font-size: 16px;
-      font-weight: bold;
-      color: #111827;
-      margin-top: 2px;
-    }
-
-    .traffic-meta {
-      font-size: 10px;
-      color: #6b7280;
-      margin-top: 2px;
-    }
-
     #status {
       flex: 0 0 auto;
       padding: 7px 10px;
@@ -219,28 +180,6 @@
         font-size: 12px;
         padding: 8px 9px;
       }
-
-      #trafficPanel {
-        grid-template-columns: 1fr 1fr;
-        padding: 6px;
-        gap: 5px;
-      }
-
-      .traffic-card {
-        padding: 6px 7px;
-      }
-
-      .traffic-title {
-        font-size: 10px;
-      }
-
-      .traffic-time {
-        font-size: 15px;
-      }
-
-      .traffic-meta {
-        font-size: 9px;
-      }
     }
   </style>
 </head>
@@ -249,14 +188,14 @@
 <div id="app">
   <header>
     <h1>PHUKET ARANG</h1>
-    <p>Urban Nook + food, malls, massage, cats, durian & checkpoint timing</p>
+    <p>Urban Nook + food, malls, massage, cats & durian</p>
   </header>
 
   <div class="controls">
     <button onclick="findMe()">📍 Me</button>
     <button class="share" onclick="shareMyLocation()">🔗 Share</button>
     <button class="home" onclick="goHome()">🏠 UrbanNook</button>
-    <button onclick="refreshTraffic()">🚗 Checkpoint</button>
+    <button onclick="openCheckpoint()">🚗 Checkpoint</button>
     <button class="secondary" onclick="filterMarkers('all')">All</button>
     <button class="secondary" onclick="filterMarkers('food')">🍜 Food</button>
     <button class="secondary" onclick="filterMarkers('mall')">🛍️ Malls</button>
@@ -266,28 +205,6 @@
     <button class="secondary" onclick="filterMarkers('attraction')">📸 Sights</button>
   </div>
 
-  <div id="trafficPanel">
-    <div class="traffic-card">
-      <div class="traffic-title">Woodlands SG → JB</div>
-      <div class="traffic-time" id="wlSgJb">--</div>
-      <div class="traffic-meta" id="wlSgJbMeta">Tap Checkpoint</div>
-    </div>
-    <div class="traffic-card">
-      <div class="traffic-title">Woodlands JB → SG</div>
-      <div class="traffic-time" id="wlJbSg">--</div>
-      <div class="traffic-meta" id="wlJbSgMeta">Tap Checkpoint</div>
-    </div>
-    <div class="traffic-card">
-      <div class="traffic-title">Tuas SG → JB</div>
-      <div class="traffic-time" id="tuasSgJb">--</div>
-      <div class="traffic-meta" id="tuasSgJbMeta">Tap Checkpoint</div>
-    </div>
-    <div class="traffic-card">
-      <div class="traffic-title">Tuas JB → SG</div>
-      <div class="traffic-time" id="tuasJbSg">--</div>
-      <div class="traffic-meta" id="tuasJbSgMeta">Tap Checkpoint</div>
-    </div>
-  </div>
 
   <div id="status">Map centred near The Urban Nook.</div>
   <div id="map"></div>
@@ -592,68 +509,12 @@
     }
   }
 
-  async function refreshTraffic() {
-    const sourceUrl = "https://www.woodlandscheckpoint.com/";
-    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(sourceUrl);
 
-    document.getElementById("status").textContent = "Fetching checkpoint timings...";
-
-    try {
-      const response = await fetch(proxyUrl, { cache: "no-store" });
-      if (!response.ok) throw new Error("Traffic fetch failed");
-
-      const html = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      const text = doc.body.innerText.replace(/\s+/g, " ");
-
-      const data = {
-        wlSgJb: extractTiming(text, "SG to JB via Woodlands"),
-        wlJbSg: extractTiming(text, "JB to SG via Woodlands"),
-        tuasSgJb: extractTiming(text, "SG to JB via Tuas"),
-        tuasJbSg: extractTiming(text, "JB to SG via Tuas")
-      };
-
-      updateTrafficCard("wlSgJb", data.wlSgJb);
-      updateTrafficCard("wlJbSg", data.wlJbSg);
-      updateTrafficCard("tuasSgJb", data.tuasSgJb);
-      updateTrafficCard("tuasJbSg", data.tuasJbSg);
-
-      const now = new Date();
-      document.getElementById("status").textContent =
-        "Checkpoint timings updated " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-    } catch (err) {
-      document.getElementById("status").innerHTML =
-        `Live checkpoint fetch blocked. <a href="${sourceUrl}" target="_blank">Open checkpoint site</a>.`;
-    }
+  function openCheckpoint() {
+    window.open("https://www.woodlandscheckpoint.com/", "_blank");
+    document.getElementById("status").textContent = "Opened live checkpoint timing site.";
   }
 
-  function extractTiming(text, label) {
-    const index = text.indexOf(label);
-    if (index === -1) return null;
-
-    const snippet = text.slice(index, index + 120);
-    const match = snippet.match(/(\d+)\s*min/i);
-
-    if (!match) return null;
-    return match[1] + " min";
-  }
-
-  function updateTrafficCard(id, value) {
-    const timeEl = document.getElementById(id);
-    const metaEl = document.getElementById(id + "Meta");
-
-    if (value) {
-      timeEl.textContent = value;
-      metaEl.textContent = "Live estimate";
-    } else {
-      timeEl.textContent = "--";
-      metaEl.textContent = "Unavailable";
-    }
-  }
-
-  refreshTraffic();
 </script>
 </body>
 </html>
