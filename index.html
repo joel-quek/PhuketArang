@@ -2,41 +2,150 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Phuket Arang Map</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #f7f7f7; }
-    header { padding: 14px 16px; background: #111827; color: white; }
-    header h1 { margin: 0; font-size: 20px; }
-    header p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 10px 12px;
+      background: #111827;
+      color: white;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    header p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      opacity: 0.85;
+    }
 
     .controls {
-      display: flex; gap: 8px; padding: 10px; overflow-x: auto;
-      background: white; border-bottom: 1px solid #ddd;
+      display: flex;
+      gap: 6px;
+      padding: 8px;
+      overflow-x: auto;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .controls::-webkit-scrollbar {
+      display: none;
     }
 
     button {
-      border: none; padding: 10px 12px; border-radius: 999px;
-      background: #2563eb; color: white; font-size: 14px;
-      white-space: nowrap; cursor: pointer;
+      border: none;
+      padding: 9px 11px;
+      border-radius: 999px;
+      background: #2563eb;
+      color: white;
+      font-size: 13px;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
     }
 
     button.secondary { background: #374151; }
     button.home { background: #dc2626; }
+    button.share { background: #059669; }
 
     #status {
-      padding: 8px 12px; font-size: 13px;
-      background: #fff7ed; color: #7c2d12;
+      padding: 7px 10px;
+      font-size: 12px;
+      background: #fff7ed;
+      color: #7c2d12;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    #map { height: calc(100vh - 132px); width: 100%; }
+    #map {
+      height: calc(100dvh - 116px);
+      width: 100%;
+    }
 
     .home-marker { font-size: 30px; }
     .food-marker, .mall-marker, .attraction-marker, .massage-marker, .cat-marker, .durian-marker {
-      font-size: 24px;
+      font-size: 25px;
+      text-align: center;
+      line-height: 30px;
+    }
+
+    .leaflet-popup-content {
+      font-size: 14px;
+      line-height: 1.4;
+      min-width: 190px;
+    }
+
+    .popup-title {
+      font-size: 15px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .popup-note {
+      margin-bottom: 6px;
+    }
+
+    .popup-small {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    .popup-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .popup-actions a {
+      display: inline-block;
+      padding: 7px 9px;
+      border-radius: 999px;
+      background: #2563eb;
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .popup-actions a.search {
+      background: #374151;
+    }
+
+    @media (max-width: 480px) {
+      header h1 {
+        font-size: 17px;
+      }
+
+      header p {
+        font-size: 11px;
+      }
+
+      button {
+        font-size: 12px;
+        padding: 8px 10px;
+      }
+
+      #map {
+        height: calc(100dvh - 112px);
+      }
     }
   </style>
 </head>
@@ -44,19 +153,20 @@
 <body>
   <header>
     <h1>PHUKET ARANG</h1>
-    <p>The Urban Nook + nearby food, malls, massage, cat cafes and durian</p>
+    <p>Urban Nook + food, malls, massage, cats & durian</p>
   </header>
 
   <div class="controls">
-    <button onclick="findMe()">📍 Show me</button>
-    <button class="home" onclick="goHome()">🏠 Urban Nook</button>
+    <button onclick="findMe()">📍 Me</button>
+    <button class="share" onclick="shareMyLocation()">🔗 Share</button>
+    <button class="home" onclick="goHome()">🏠 Home</button>
     <button class="secondary" onclick="filterMarkers('all')">All</button>
-    <button class="secondary" onclick="filterMarkers('food')">Food</button>
-    <button class="secondary" onclick="filterMarkers('mall')">Malls</button>
-    <button class="secondary" onclick="filterMarkers('massage')">Massage</button>
-    <button class="secondary" onclick="filterMarkers('cat')">Cat Cafes</button>
-    <button class="secondary" onclick="filterMarkers('durian')">Durian</button>
-    <button class="secondary" onclick="filterMarkers('attraction')">Attractions</button>
+    <button class="secondary" onclick="filterMarkers('food')">🍜 Food</button>
+    <button class="secondary" onclick="filterMarkers('mall')">🛍️ Malls</button>
+    <button class="secondary" onclick="filterMarkers('massage')">💆 Massage</button>
+    <button class="secondary" onclick="filterMarkers('cat')">🐱 Cats</button>
+    <button class="secondary" onclick="filterMarkers('durian')">🍈 Durian</button>
+    <button class="secondary" onclick="filterMarkers('attraction')">📸 Sights</button>
   </div>
 
   <div id="status">Map centred near The Urban Nook.</div>
@@ -70,10 +180,14 @@
       type: "home",
       lat: 1.4848,
       lng: 103.7666,
-      address: "14, Jalan Rentaka 2, Taman Sri Tebrau, 80050 Johor Bahru"
+      address: "14, Jalan Rentaka 2, Taman Sri Tebrau, 80050 Johor Bahru",
+      note: "Group accommodation"
     };
 
-    const map = L.map("map").setView([urbanNook.lat, urbanNook.lng], 15);
+    const map = L.map("map", {
+      zoomControl: true,
+      tap: true
+    }).setView([urbanNook.lat, urbanNook.lng], 15);
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
@@ -82,6 +196,7 @@
 
     let userMarker = null;
     let userCircle = null;
+    let lastUserLocation = null;
 
     const homeIcon = L.divIcon({ html: "🏠", className: "home-marker", iconSize: [34,34], iconAnchor: [17,17] });
     const foodIcon = L.divIcon({ html: "🍜", className: "food-marker", iconSize: [30,30], iconAnchor: [15,15] });
@@ -89,7 +204,7 @@
     const attractionIcon = L.divIcon({ html: "📸", className: "attraction-marker", iconSize: [30,30], iconAnchor: [15,15] });
     const massageIcon = L.divIcon({ html: "💆", className: "massage-marker", iconSize: [30,30], iconAnchor: [15,15] });
     const catIcon = L.divIcon({ html: "🐱", className: "cat-marker", iconSize: [30,30], iconAnchor: [15,15] });
-    const durianIcon = L.divIcon({ html: "🟡", className: "durian-marker", iconSize: [30,30], iconAnchor: [15,15] });
+    const durianIcon = L.divIcon({ html: "🍈", className: "durian-marker", iconSize: [30,30], iconAnchor: [15,15] });
 
     function getIcon(type) {
       if (type === "food") return foodIcon;
@@ -106,6 +221,14 @@
       return `https://www.google.com/maps/search/?api=1&query=${query}`;
     }
 
+    function googleMapsDirections(place) {
+      return `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=driving`;
+    }
+
+    function googleMapsLocationLink(lat, lng) {
+      return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    }
+
     function distanceFromHome(lat, lng) {
       const R = 6371;
       const dLat = (lat - urbanNook.lat) * Math.PI / 180;
@@ -120,16 +243,33 @@
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distance = R * c;
 
-      if (distance < 1) return `${Math.round(distance * 1000)}m from The Urban Nook`;
-      return `${distance.toFixed(1)}km from The Urban Nook`;
+      if (distance < 1) return `${Math.round(distance * 1000)}m from Urban Nook`;
+      return `${distance.toFixed(1)}km from Urban Nook`;
+    }
+
+    function popupHtml(place) {
+      return `
+        <div class="popup-title">${place.name}</div>
+        <div class="popup-note">${place.note}</div>
+        <strong>${distanceFromHome(place.lat, place.lng)}</strong><br><br>
+        <div class="popup-small">${place.address}</div>
+        <div class="popup-actions">
+          <a href="${googleMapsDirections(place)}" target="_blank">Directions</a>
+          <a class="search" href="${googleMapsSearch(place)}" target="_blank">Maps</a>
+        </div>
+      `;
     }
 
     const homeMarker = L.marker([urbanNook.lat, urbanNook.lng], { icon: homeIcon }).addTo(map);
 
     homeMarker.bindPopup(`
-      <strong>🏠 ${urbanNook.name}</strong><br>
-      ${urbanNook.address}<br><br>
-      <a href="${googleMapsSearch(urbanNook)}" target="_blank">Open in Google Maps</a>
+      <div class="popup-title">🏠 ${urbanNook.name}</div>
+      <div class="popup-note">${urbanNook.note}</div>
+      <div class="popup-small">${urbanNook.address}</div>
+      <div class="popup-actions">
+        <a href="${googleMapsDirections(urbanNook)}" target="_blank">Directions</a>
+        <a class="search" href="${googleMapsSearch(urbanNook)}" target="_blank">Maps</a>
+      </div>
     `).openPopup();
 
     L.circle([urbanNook.lat, urbanNook.lng], {
@@ -329,6 +469,38 @@
         address: "Level 2-01A, KSL City Mall, Johor Bahru",
         note: "Massage and nails at KSL"
       },
+      {
+        name: "Bangkok Spa Taman Pelangi",
+        type: "massage",
+        lat: 1.4816,
+        lng: 103.7726,
+        address: "Taman Pelangi, Johor Bahru",
+        note: "Massage option near Pelangi"
+      },
+      {
+        name: "Thai Odyssey @ Mid Valley Southkey",
+        type: "massage",
+        lat: 1.5008,
+        lng: 103.7778,
+        address: "The Mall, Mid Valley Southkey, Johor Bahru",
+        note: "Massage option inside Mid Valley Southkey"
+      },
+      {
+        name: "Family Thai Spa Taman Sentosa",
+        type: "massage",
+        lat: 1.4910,
+        lng: 103.7712,
+        address: "Taman Sentosa, Johor Bahru",
+        note: "Massage option around Taman Sentosa"
+      },
+      {
+        name: "Walea Spa & Retreat",
+        type: "massage",
+        lat: 1.4918,
+        lng: 103.7750,
+        address: "Taman Sentosa / Southkey area, Johor Bahru",
+        note: "Spa / massage option near Southkey area"
+      },
 
       // Cat cafes
       {
@@ -354,6 +526,22 @@
         lng: 103.7621,
         address: "Komtar JBCC, Johor Bahru",
         note: "Cat cafe branch near City Square"
+      },
+      {
+        name: "KopiCat Cafe",
+        type: "cat",
+        lat: 1.4925,
+        lng: 103.7760,
+        address: "Southkey / Taman Sentosa area, Johor Bahru",
+        note: "Cat-themed cafe option"
+      },
+      {
+        name: "Neko Cat Cafe Mount Austin",
+        type: "cat",
+        lat: 1.5590,
+        lng: 103.7810,
+        address: "Mount Austin, Johor Bahru",
+        note: "Cat cafe option in Mount Austin"
       },
 
       // Durian
@@ -423,13 +611,7 @@
     places.forEach(place => {
       const marker = L.marker([place.lat, place.lng], { icon: getIcon(place.type) });
 
-      marker.bindPopup(`
-        <strong>${place.name}</strong><br>
-        ${place.note}<br>
-        <strong>${distanceFromHome(place.lat, place.lng)}</strong><br><br>
-        <small>${place.address}</small><br><br>
-        <a href="${googleMapsSearch(place)}" target="_blank">Open in Google Maps</a>
-      `);
+      marker.bindPopup(popupHtml(place));
 
       marker.placeType = place.type;
       allMarkers.push(marker);
@@ -447,14 +629,14 @@
 
       document.getElementById("status").textContent =
         type === "all"
-          ? "Showing all food, malls, massage, cat cafes, durian and attractions."
+          ? "Showing all places."
           : `Showing ${type} places.`;
     }
 
     function goHome() {
       map.setView([urbanNook.lat, urbanNook.lng], 16);
       homeMarker.openPopup();
-      document.getElementById("status").textContent = "Centred on The Urban Nook.";
+      document.getElementById("status").textContent = "Centred on Urban Nook.";
     }
 
     function findMe() {
@@ -470,34 +652,95 @@
         const lng = pos.coords.longitude;
         const acc = pos.coords.accuracy;
 
+        lastUserLocation = { lat, lng };
+
         map.setView([lat, lng], 16);
 
         if (userMarker) map.removeLayer(userMarker);
         if (userCircle) map.removeLayer(userCircle);
 
+        const shareLink = googleMapsLocationLink(lat, lng);
+
         userMarker = L.marker([lat, lng]).addTo(map)
           .bindPopup(`
-            <strong>📍 You are here</strong><br>
+            <div class="popup-title">📍 You are here</div>
             Accuracy: about ${Math.round(acc)}m<br><br>
-            <a href="https://www.google.com/maps/search/?api=1&query=${lat},${lng}" target="_blank">
-              Open my location in Google Maps
-            </a>
+            <div class="popup-actions">
+              <a href="${shareLink}" target="_blank">Open</a>
+              <a class="search" href="#" onclick="copyText('${shareLink}'); return false;">Copy Link</a>
+            </div>
           `)
           .openPopup();
 
-        userCircle = L.circle([lat, lng], { radius: acc }).addTo(map);
+        userCircle = L.circle([lat, lng], {
+          radius: acc,
+          color: "#2563eb",
+          fillColor: "#2563eb",
+          fillOpacity: 0.08
+        }).addTo(map);
 
         document.getElementById("status").textContent =
-          `Location found. Accuracy: about ${Math.round(acc)}m.`;
+          `Location found · ${Math.round(acc)}m accuracy.`;
       }, () => {
         alert("Location failed. Enable GPS/location permission.");
         document.getElementById("status").textContent =
-          "Could not get your location. Check location permissions.";
+          "Could not get your location.";
       }, {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 0
       });
+    }
+
+    function shareMyLocation() {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by this browser.");
+        return;
+      }
+
+      document.getElementById("status").textContent = "Getting shareable location link...";
+
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const link = googleMapsLocationLink(lat, lng);
+
+        lastUserLocation = { lat, lng };
+
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "My current location",
+              text: "Here is my current location:",
+              url: link
+            });
+            document.getElementById("status").textContent = "Location shared.";
+          } catch (err) {
+            copyText(link);
+          }
+        } else {
+          copyText(link);
+        }
+      }, () => {
+        alert("Location failed. Enable GPS/location permission.");
+        document.getElementById("status").textContent =
+          "Could not get your location.";
+      }, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          document.getElementById("status").textContent = "Location link copied.";
+          alert("Location link copied.");
+        });
+      } else {
+        prompt("Copy this link:", text);
+      }
     }
   </script>
 </body>
