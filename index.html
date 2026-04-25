@@ -35,7 +35,7 @@
     #map { height: calc(100vh - 132px); width: 100%; }
 
     .home-marker { font-size: 30px; }
-    .food-marker, .mall-marker, .attraction-marker, .massage-marker, .cat-marker {
+    .food-marker, .mall-marker, .attraction-marker, .massage-marker, .cat-marker, .durian-marker {
       font-size: 24px;
     }
   </style>
@@ -44,7 +44,7 @@
 <body>
   <header>
     <h1>PHUKET ARANG</h1>
-    <p>The Urban Nook + nearby food, malls, massage and cat cafes</p>
+    <p>The Urban Nook + nearby food, malls, massage, cat cafes and durian</p>
   </header>
 
   <div class="controls">
@@ -55,6 +55,7 @@
     <button class="secondary" onclick="filterMarkers('mall')">Malls</button>
     <button class="secondary" onclick="filterMarkers('massage')">Massage</button>
     <button class="secondary" onclick="filterMarkers('cat')">Cat Cafes</button>
+    <button class="secondary" onclick="filterMarkers('durian')">Durian</button>
     <button class="secondary" onclick="filterMarkers('attraction')">Attractions</button>
   </div>
 
@@ -88,12 +89,14 @@
     const attractionIcon = L.divIcon({ html: "📸", className: "attraction-marker", iconSize: [30,30], iconAnchor: [15,15] });
     const massageIcon = L.divIcon({ html: "💆", className: "massage-marker", iconSize: [30,30], iconAnchor: [15,15] });
     const catIcon = L.divIcon({ html: "🐱", className: "cat-marker", iconSize: [30,30], iconAnchor: [15,15] });
+    const durianIcon = L.divIcon({ html: "🟡", className: "durian-marker", iconSize: [30,30], iconAnchor: [15,15] });
 
     function getIcon(type) {
       if (type === "food") return foodIcon;
       if (type === "mall") return mallIcon;
       if (type === "massage") return massageIcon;
       if (type === "cat") return catIcon;
+      if (type === "durian") return durianIcon;
       if (type === "attraction") return attractionIcon;
       return foodIcon;
     }
@@ -353,6 +356,48 @@
         note: "Cat cafe branch near City Square"
       },
 
+      // Durian
+      {
+        name: "Ah Tong Durian",
+        type: "durian",
+        lat: 1.4860,
+        lng: 103.7610,
+        address: "34, 2, Jalan Serigala, Taman Abad, 80250 Johor Bahru",
+        note: "Durian near KSL / Taman Abad · seasonal availability"
+      },
+      {
+        name: "JS Deluxe Durian",
+        type: "durian",
+        lat: 1.4853,
+        lng: 103.7620,
+        address: "32, Jalan Seladang, Taman Abad, 80250 Johor Bahru",
+        note: "Durian near KSL area"
+      },
+      {
+        name: "KSL Durian Shops",
+        type: "durian",
+        lat: 1.4852,
+        lng: 103.7622,
+        address: "KSL City Mall area, 33 Jalan Seladang, Taman Abad, 80250 Johor Bahru",
+        note: "Durian stalls around KSL area · check current opening"
+      },
+      {
+        name: "Taman Pelangi Durian Area",
+        type: "durian",
+        lat: 1.4835,
+        lng: 103.7740,
+        address: "Taman Pelangi, Johor Bahru",
+        note: "General durian area / seasonal stalls · verify before going"
+      },
+      {
+        name: "Machap King Durian",
+        type: "durian",
+        lat: 1.5220,
+        lng: 103.7905,
+        address: "37, Jalan Molek 2/1, Taman Molek, 81100 Johor Bahru",
+        note: "Further out · durian option in Taman Molek"
+      },
+
       // Attractions
       {
         name: "Jalan Tan Hiok Nee",
@@ -402,7 +447,7 @@
 
       document.getElementById("status").textContent =
         type === "all"
-          ? "Showing all food, malls, massage, cat cafes and attractions."
+          ? "Showing all food, malls, massage, cat cafes, durian and attractions."
           : `Showing ${type} places.`;
     }
 
