@@ -564,9 +564,19 @@
 
   places.forEach(place => {
     const marker = L.marker([place.lat, place.lng], { icon: getIcon(place.type) });
-    marker.bindPopup(popupHtml(place));
     marker.placeType = place.type;
     marker.placeData = place;
+
+    // Important: use a function so Leaflet rebuilds the popup from the latest
+    // voteCounts every time the marker is opened. This fixes stale popup counts.
+    marker.bindPopup(() => popupHtml(place));
+
+    // Extra safety: when the popup opens, immediately refresh its content again
+    // in case Firebase votes arrived after the marker was first created.
+    marker.on("popupopen", () => {
+      marker.setPopupContent(popupHtml(place));
+    });
+
     allMarkers.push(marker);
     markerLayer.addLayer(marker);
     listenVotes(place.name);
