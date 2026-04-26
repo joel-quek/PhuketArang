@@ -229,6 +229,14 @@
     }
 
     .popup-actions a.search { background: var(--dark); }
+    .popup-actions a.live { background: #0f766e; }
+
+    .data-note {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
 
     .vote-row {
       display: flex;
@@ -271,7 +279,7 @@
 <div id="app">
   <header>
     <h1>PHUKET ARANG</h1>
-    <p>Urban Nook + food, malls, massage, cats, durian & votes</p>
+    <p>Urban Nook + food, malls, massage, cats, durian, votes & live info</p>
   </header>
 
   <div class="controls">
@@ -296,7 +304,7 @@
     <div id="topPicks" class="top-picks">Waiting for votes...</div>
   </div>
 
-  <div id="status">Map centred near The Urban Nook.</div>
+  <div id="status">Map centred near The Urban Nook. Tap Live Info in any popup for latest Google Maps data.</div>
   <div id="map"></div>
 </div>
 
@@ -319,6 +327,11 @@
   const db = getFirestore(app);
   const voteCounts = {};
   const voteUnsubscribers = {};
+
+  // No-API live info approach:
+  // Ratings/hours below are manual guide values. The Live Info button opens the latest Google Maps listing.
+  const DATA_LAST_CHECKED = "Apr 2026";
+  const DATA_SOURCE = "Manual guide; tap Live Info for latest Google Maps data";
 
   const urbanNook = {
     name: "The Urban Nook",
@@ -365,6 +378,12 @@
   function googleMapsSearch(place) {
     const query = encodeURIComponent(`${place.name} ${place.address || ""}`);
     return `https://www.google.com/maps/search/?api=1&query=${query}`;
+  }
+
+  function googleMapsLiveInfo(place) {
+    // Same Google Maps search endpoint, labelled differently for users.
+    // Opens the live listing so users can verify current hours, reviews, crowd level and photos.
+    return googleMapsSearch(place);
   }
 
   function googleMapsDirections(place) {
@@ -444,9 +463,11 @@
         ${ratingHtml}
         ${priceHtml}
         ${hoursHtml}
+        <span class="badge neutral">📌 Checked ${place.lastChecked || DATA_LAST_CHECKED}</span>
       </div>
       <strong>${distanceFromHome(place.lat, place.lng)}</strong><br><br>
       <div class="popup-small">${place.address}</div>
+      <div class="data-note">Hours/ratings are a guide. Tap <strong>Live Info</strong> for latest opening hours and Google reviews.</div>
 
       <div class="vote-row">
         <button class="vote-button" onclick="vote('${escapeJsString(place.name)}')">👍 Vote</button>
@@ -455,6 +476,7 @@
 
       <div class="popup-actions">
         <a href="${googleMapsDirections(place)}" target="_blank">Directions</a>
+        <a class="live" href="${googleMapsLiveInfo(place)}" target="_blank">Live Info</a>
         <a class="search" href="${googleMapsSearch(place)}" target="_blank">Maps</a>
       </div>
     `;
