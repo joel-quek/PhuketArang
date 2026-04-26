@@ -252,6 +252,13 @@
       font-size: 12px;
     }
 
+    .vote-button.voted,
+    .vote-button:disabled {
+      background: #6b7280;
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+
     .vote-count {
       font-weight: bold;
       color: #111827;
@@ -327,6 +334,7 @@
   const db = getFirestore(app);
   const voteCounts = {};
   const voteUnsubscribers = {};
+  const voteInProgress = new Set();
 
   // No-API live info approach:
   // Ratings/hours below are manual guide values. The Live Info button opens the latest Google Maps listing.
@@ -417,6 +425,34 @@
     return String(text).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   }
 
+  function voteStorageKey(placeName) {
+    return "phuketArang_voted_" + safeId(placeName);
+  }
+
+  function hasVoted(placeName) {
+    try {
+      return localStorage.getItem(voteStorageKey(placeName)) === "1";
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function markVoted(placeName) {
+    try {
+      localStorage.setItem(voteStorageKey(placeName), "1");
+    } catch (err) {
+      console.warn("Could not save vote lock", err);
+    }
+  }
+
+  function unmarkVoted(placeName) {
+    try {
+      localStorage.removeItem(voteStorageKey(placeName));
+    } catch (err) {
+      console.warn("Could not remove vote lock", err);
+    }
+  }
+
   function formatHours(hours) {
     if (!hours) return "Hours unknown";
     if (hours === "00:00-23:59") return "Open 24h / available anytime";
@@ -451,6 +487,10 @@
   function popupHtml(place) {
     const voteId = "vote-" + safeId(place.name);
     const votes = voteCounts[place.name] || 0;
+    const alreadyVoted = hasVoted(place.name);
+    const voteButtonText = alreadyVoted ? "✅ Voted" : "👍 Vote";
+    const voteButtonDisabled = alreadyVoted ? "disabled" : "";
+    const voteButtonClass = alreadyVoted ? "vote-button voted" : "vote-button";
     const ratingHtml = place.rating ? `<span class="badge rating">⭐ ${place.rating}</span>` : "";
     const priceHtml = place.price ? `<span class="badge neutral">${place.price}</span>` : "";
     const hoursHtml = place.hours ? `<span class="badge neutral">🕒 ${formatHours(place.hours)}</span>` : "";
@@ -470,7 +510,7 @@
       <div class="data-note">Hours/ratings are a guide. Tap <strong>Live Info</strong> for latest opening hours and Google reviews.</div>
 
       <div class="vote-row">
-        <button class="vote-button" onclick="vote('${escapeJsString(place.name)}')">👍 Vote</button>
+        <button class="${voteButtonClass}" onclick="vote('${escapeJsString(place.name)}')" ${voteButtonDisabled}>${voteButtonText}</button>
         <span class="vote-count" id="${voteId}-row">👍 ${votes}</span>
       </div>
 
@@ -605,15 +645,42 @@
   });
 
   async function vote(placeName) {
+    if (hasVoted(placeName)) {
+      document.getElementById("status").textContent = `You already voted for ${placeName} on this device.`;
+      refreshOpenPopup(placeName);
+      return;
+    }
+
+    if (voteInProgress.has(placeName)) {
+      document.getElementById("status").textContent = `Vote for ${placeName} is already being submitted...`;
+      return;
+    }
+
+    voteInProgress.add(placeName);
+    document.getElementById("status").textContent = `Submitting vote for ${placeName}...`;
+
     const ref = doc(db, "votes", placeName);
 
     try {
       await updateDoc(ref, { count: increment(1) });
+      markVoted(placeName);
+      refreshOpenPopup(placeName);
+      document.getElementById("status").textContent = `Voted for ${placeName}.`;
     } catch (err) {
-      await setDoc(ref, { count: 1 });
+      try {
+        await setDoc(ref, { count: 1 });
+        markVoted(placeName);
+        refreshOpenPopup(placeName);
+        document.getElementById("status").textContent = `Voted for ${placeName}.`;
+      } catch (finalErr) {
+        unmarkVoted(placeName);
+        console.error("Vote failed", finalErr);
+        document.getElementById("status").textContent = "Vote failed. Please try again.";
+        alert("Vote failed. Please try again.");
+      }
+    } finally {
+      voteInProgress.delete(placeName);
     }
-
-    document.getElementById("status").textContent = `Voted for ${placeName}.`;
   }
 
   function listenVotes(placeName) {
