@@ -252,13 +252,6 @@
       font-size: 12px;
     }
 
-    .vote-button.voted,
-    .vote-button:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
-      opacity: 0.85;
-    }
-
     .vote-count {
       font-weight: bold;
       color: #111827;
@@ -477,7 +470,7 @@
       <div class="data-note">Hours/ratings are a guide. Tap <strong>Live Info</strong> for latest opening hours and Google reviews.</div>
 
       <div class="vote-row">
-        <span id="vote-button-${voteId.replace('vote-', '')}">${formatVoteButton(place.name)}</span>
+        <button class="vote-button" onclick="vote('${escapeJsString(place.name)}')">👍 Vote</button>
         <span class="vote-count" id="${voteId}-row">👍 ${votes}</span>
       </div>
 
@@ -612,13 +605,6 @@
   });
 
   async function vote(placeName) {
-    if (hasDeviceVoted(placeName)) {
-      document.getElementById("status").textContent = `Already voted for ${placeName} on this device.`;
-      alert("You have already voted for this place on this device.");
-      refreshOpenPopup(placeName);
-      return;
-    }
-
     const ref = doc(db, "votes", placeName);
 
     try {
@@ -627,8 +613,6 @@
       await setDoc(ref, { count: 1 });
     }
 
-    markDeviceVoted(placeName);
-    refreshOpenPopup(placeName);
     document.getElementById("status").textContent = `Voted for ${placeName}.`;
   }
 
@@ -644,7 +628,6 @@
       if (el) el.textContent = `👍 ${count}`;
       const rowEl = document.getElementById("vote-" + safeId(placeName) + "-row");
       if (rowEl) rowEl.textContent = `👍 ${count}`;
-      refreshVoteButtonState(placeName);
 
       refreshOpenPopup(placeName);
       updateTopPicks();
