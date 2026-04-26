@@ -159,6 +159,69 @@
       background: var(--dark);
     }
 
+
+    .decision-panel {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 8px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .decision-panel::-webkit-scrollbar { display: none; }
+
+    .decision-title {
+      font-size: 12px;
+      font-weight: bold;
+      color: #111827;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .top-picks {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .top-picks::-webkit-scrollbar { display: none; }
+
+    .top-pick {
+      border: 1px solid #d1d5db;
+      background: white;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 12px;
+      color: #111827;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .vote-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+      flex-wrap: wrap;
+    }
+
+    .vote-button {
+      background: var(--green);
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+
+    .vote-count {
+      font-weight: bold;
+      color: #111827;
+    }
+
     @media (max-width: 480px) {
       header {
         padding: 12px 12px 9px;
@@ -196,6 +259,7 @@
     <button class="share" onclick="shareMyLocation()">🔗 Share</button>
     <button class="home" onclick="goHome()">🏠 UrbanNook</button>
     <button onclick="openCheckpoint()">🚗 Checkpoint</button>
+    <button onclick="decideForMe()">🎲 Decide</button>
     <button class="secondary" onclick="filterMarkers('all')">All</button>
     <button class="secondary" onclick="filterMarkers('food')">🍜 Food</button>
     <button class="secondary" onclick="filterMarkers('mall')">🛍️ Malls</button>
@@ -206,13 +270,35 @@
   </div>
 
 
+  <div class="decision-panel">
+    <div class="decision-title">🏆 Top Picks</div>
+    <div id="topPicks" class="top-picks">Waiting for votes...</div>
+  </div>
+
   <div id="status">Map centred near The Urban Nook.</div>
   <div id="map"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCWhhePl8hpHV12uwr0-4LWmuP1_CIrqYJI",
+    authDomain: "phuket-arang.firebaseapp.com",
+    projectId: "phuket-arang",
+    storageBucket: "phuket-arang.firebasestorage.app",
+    messagingSenderId: "352587072367",
+    appId: "1:352587072367:web:62376cc321b84f57da5e9a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const voteCounts = {};
+  const voteUnsubscribers = {};
+
   const urbanNook = {
     name: "The Urban Nook",
     type: "home",
@@ -287,12 +373,28 @@
     return `${distance.toFixed(1)}km from Urban Nook`;
   }
 
+  function safeId(name) {
+    return name.replace(/[^a-zA-Z0-9]/g, "");
+  }
+
+  function escapeJsString(text) {
+    return String(text).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  }
+
   function popupHtml(place) {
+    const voteId = "vote-" + safeId(place.name);
+
     return `
       <div class="popup-title">${place.name}</div>
       <div class="popup-note">${place.note}</div>
       <strong>${distanceFromHome(place.lat, place.lng)}</strong><br><br>
       <div class="popup-small">${place.address}</div>
+
+      <div class="vote-row">
+        <button class="vote-button" onclick="vote('${escapeJsString(place.name)}')">👍 Vote</button>
+        <span class="vote-count" id="${voteId}">👍 ${voteCounts[place.name] || 0}</span>
+      </div>
+
       <div class="popup-actions">
         <a href="${googleMapsDirections(place)}" target="_blank">Directions</a>
         <a class="search" href="${googleMapsSearch(place)}" target="_blank">Maps</a>
@@ -373,9 +475,105 @@
     const marker = L.marker([place.lat, place.lng], { icon: getIcon(place.type) });
     marker.bindPopup(popupHtml(place));
     marker.placeType = place.type;
+    marker.placeData = place;
     allMarkers.push(marker);
     markerLayer.addLayer(marker);
+    listenVotes(place.name);
   });
+
+
+  async function vote(placeName) {
+    const ref = doc(db, "votes", placeName);
+
+    try {
+      await updateDoc(ref, { count: increment(1) });
+    } catch (err) {
+      await setDoc(ref, { count: 1 });
+    }
+
+    document.getElementById("status").textContent = `Voted for ${placeName}.`;
+  }
+
+  function listenVotes(placeName) {
+    if (voteUnsubscribers[placeName]) return;
+
+    const ref = doc(db, "votes", placeName);
+    voteUnsubscribers[placeName] = onSnapshot(ref, (docSnap) => {
+      const count = docSnap.exists() ? (docSnap.data().count || 0) : 0;
+      voteCounts[placeName] = count;
+
+      const el = document.getElementById("vote-" + safeId(placeName));
+      if (el) el.textContent = `👍 ${count}`;
+
+      refreshOpenPopup(placeName);
+      updateTopPicks();
+    }, (err) => {
+      console.error("Vote listener error", err);
+      document.getElementById("status").textContent = "Vote sync issue. Check Firestore rules.";
+    });
+  }
+
+  function refreshOpenPopup(placeName) {
+    const openMarker = allMarkers.find(marker => marker.isPopupOpen && marker.isPopupOpen());
+    if (!openMarker || !openMarker.placeData || openMarker.placeData.name !== placeName) return;
+    openMarker.setPopupContent(popupHtml(openMarker.placeData));
+  }
+
+  function updateTopPicks() {
+    const topPicksEl = document.getElementById("topPicks");
+    const ranked = [...places]
+      .map(place => ({ ...place, votes: voteCounts[place.name] || 0 }))
+      .sort((a, b) => {
+        if (b.votes !== a.votes) return b.votes - a.votes;
+        return getDistanceKm(urbanNook.lat, urbanNook.lng, a.lat, a.lng) - getDistanceKm(urbanNook.lat, urbanNook.lng, b.lat, b.lng);
+      })
+      .slice(0, 3);
+
+    if (!ranked.length || ranked.every(place => place.votes === 0)) {
+      topPicksEl.innerHTML = `<span class="top-pick">No votes yet</span>`;
+      return;
+    }
+
+    topPicksEl.innerHTML = ranked.map((place, index) => `
+      <button class="top-pick" onclick="focusPlace('${escapeJsString(place.name)}')">
+        ${index + 1}. ${place.name} · 👍 ${place.votes}
+      </button>
+    `).join("");
+  }
+
+  function getDistanceKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function focusPlace(placeName) {
+    const marker = allMarkers.find(m => m.placeData && m.placeData.name === placeName);
+    if (!marker) return;
+    map.setView(marker.getLatLng(), 17);
+    marker.openPopup();
+    document.getElementById("status").textContent = `Focused on ${placeName}.`;
+  }
+
+  function decideForMe() {
+    const voted = [...places]
+      .map(place => ({ ...place, votes: voteCounts[place.name] || 0 }))
+      .sort((a, b) => {
+        if (b.votes !== a.votes) return b.votes - a.votes;
+        return getDistanceKm(urbanNook.lat, urbanNook.lng, a.lat, a.lng) - getDistanceKm(urbanNook.lat, urbanNook.lng, b.lat, b.lng);
+      });
+    const pick = voted.find(place => place.votes > 0) || voted[0];
+    if (!pick) return;
+    focusPlace(pick.name);
+    document.getElementById("status").textContent = `Decision: ${pick.name} · 👍 ${voteCounts[pick.name] || 0}.`;
+  }
+
+  window.vote = vote;
+  window.focusPlace = focusPlace;
+  window.decideForMe = decideForMe;
 
   function filterMarkers(type) {
     markerLayer.clearLayers();
@@ -514,6 +712,14 @@
     window.open("https://www.woodlandscheckpoint.com/", "_blank");
     document.getElementById("status").textContent = "Opened live checkpoint timing site.";
   }
+
+
+  window.findMe = findMe;
+  window.shareMyLocation = shareMyLocation;
+  window.goHome = goHome;
+  window.filterMarkers = filterMarkers;
+  window.openCheckpoint = openCheckpoint;
+  updateTopPicks();
 
 </script>
 </body>
