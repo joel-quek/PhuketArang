@@ -652,7 +652,7 @@
         if ((b.rating || 0) !== (a.rating || 0)) return Number(b.rating || 0) - Number(a.rating || 0);
         return getDistanceKm(urbanNook.lat, urbanNook.lng, a.lat, a.lng) - getDistanceKm(urbanNook.lat, urbanNook.lng, b.lat, b.lng);
       })
-      .slice(0, 3);
+      .slice(0, 5);
 
     if (!ranked.length || ranked.every(place => place.votes === 0)) {
       topPicksEl.innerHTML = `<button class="top-pick" onclick="decideForMe()">No votes yet · tap 🎲 Decide</button>`;
