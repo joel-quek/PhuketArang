@@ -2,901 +2,813 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Phuket Arang Map</title>
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Group Decision Board</title>
 
   <style>
     :root {
-      --header-bg: #111827;
-      --blue: #2563eb;
-      --dark: #374151;
-      --red: #dc2626;
-      --green: #059669;
-      --orange-bg: #fff7ed;
-      --orange-text: #7c2d12;
-      --border: #e5e7eb;
-      --muted: #6b7280;
+      --bg:#f7f7f7; --card:#fff; --dark:#111827; --muted:#6b7280;
+      --border:#e5e7eb; --blue:#2563eb; --green:#059669; --red:#dc2626;
+      --purple:#7c3aed; --amber-bg:#fffbeb; --amber-text:#92400e;
     }
 
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      overflow: hidden;
-      -webkit-text-size-adjust: 100%;
-    }
+    * { box-sizing:border-box; }
 
     body {
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    #app {
-      height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:var(--bg);
+      color:var(--dark);
     }
 
     header {
-      flex: 0 0 auto;
-      padding: 11px 12px 9px;
-      background: var(--header-bg);
-      color: white;
-      z-index: 1000;
+      background:var(--dark);
+      color:white;
+      padding:18px 16px;
     }
 
-    header h1 {
-      margin: 0;
-      font-size: 18px;
-      line-height: 1.2;
-      padding-top: 2px;
-      letter-spacing: 0.2px;
+    header h1 { margin:0; font-size:22px; }
+    header p { margin:6px 0 0; font-size:13px; opacity:.85; }
+
+    main {
+      max-width:850px;
+      margin:0 auto;
+      padding:14px;
     }
 
-    header p {
-      margin: 3px 0 0;
-      font-size: 12px;
-      opacity: 0.85;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .section, .decision-card {
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      margin-bottom:14px;
+      box-shadow:0 2px 8px rgba(0,0,0,.04);
     }
 
-    .controls {
-      flex: 0 0 auto;
-      display: flex;
-      gap: 6px;
-      padding: 7px 8px;
-      overflow-x: auto;
-      background: white;
-      border-bottom: 1px solid var(--border);
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .controls::-webkit-scrollbar,
-    .top-picks::-webkit-scrollbar,
-    .decision-panel::-webkit-scrollbar { display: none; }
-
-    button {
-      border: none;
-      padding: 8px 10px;
-      border-radius: 999px;
-      background: var(--blue);
-      color: white;
-      font-size: 12px;
-      white-space: nowrap;
-      cursor: pointer;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    button.secondary { background: var(--dark); }
-    button.home { background: var(--red); }
-    button.share { background: var(--green); }
-    button.warn { background: #b45309; }
-
-    .decision-panel {
-      flex: 0 0 auto;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      padding: 7px 8px;
-      background: #f9fafb;
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
+    h2 { margin:0 0 10px; font-size:17px; }
 
     .decision-title {
-      font-size: 12px;
-      font-weight: bold;
-      color: #111827;
-      white-space: nowrap;
-      flex-shrink: 0;
+      font-size:16px;
+      font-weight:bold;
+      margin-bottom:4px;
     }
 
-    .top-picks {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+    .decision-subtitle {
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:12px;
     }
 
-    .top-pick {
-      border: 1px solid #d1d5db;
-      background: white;
-      border-radius: 999px;
-      padding: 6px 9px;
-      font-size: 12px;
-      color: #111827;
-      white-space: nowrap;
-      cursor: pointer;
-      flex-shrink: 0;
+    .option {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+      margin-bottom:8px;
+      background:#fafafa;
     }
+
+    .option-main { min-width:0; }
+    .option-title { font-weight:bold; font-size:14px; }
+    .option-note { font-size:12px; color:var(--muted); margin-top:3px; }
+    .votes { font-size:13px; font-weight:bold; white-space:nowrap; }
+
+    button {
+      border:none;
+      border-radius:999px;
+      padding:8px 11px;
+      font-size:12px;
+      color:white;
+      background:var(--blue);
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    button:disabled { background:#9ca3af; cursor:not-allowed; }
+    button.finalise { background:var(--green); }
+    button.reset, button.delete { background:var(--red); }
+    button.admin { background:var(--purple); }
+    button.small { padding:6px 9px; font-size:11px; }
+
+    input {
+      width:100%;
+      padding:9px 10px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      margin-bottom:8px;
+      font-size:13px;
+    }
+
+    label {
+      font-size:12px;
+      font-weight:bold;
+      display:block;
+      margin-bottom:4px;
+    }
+
+    .winner, .final {
+      margin-top:10px;
+      padding:10px;
+      border-radius:12px;
+      font-size:13px;
+      font-weight:bold;
+    }
+
+    .winner { background:#ecfdf5; color:#065f46; }
+    .final { background:#eff6ff; color:#1e3a8a; }
+
+    .warning {
+      padding:10px;
+      border-radius:12px;
+      background:var(--amber-bg);
+      color:var(--amber-text);
+      font-size:13px;
+      margin-top:8px;
+      line-height:1.4;
+    }
+
+    .actions {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .admin-panel {
+      display:none;
+      border:1px dashed #c4b5fd;
+      background:#faf5ff;
+      border-radius:14px;
+      padding:12px;
+      margin-top:12px;
+    }
+
+    .admin-visible { display:block; }
 
     #status {
-      flex: 0 0 auto;
-      padding: 7px 10px;
-      font-size: 12px;
-      background: var(--orange-bg);
-      color: var(--orange-text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:12px;
     }
 
-    #map {
-      flex: 1 1 auto;
-      min-height: 0;
-      width: 100%;
-    }
-
-    .home-marker { font-size: 30px; }
-    .food-marker, .mall-marker, .attraction-marker, .massage-marker, .cat-marker, .durian-marker {
-      font-size: 25px;
-      text-align: center;
-      line-height: 30px;
-    }
-
-    .leaflet-popup-content {
-      font-size: 14px;
-      line-height: 1.4;
-      min-width: 220px;
-      max-width: 260px;
-      margin: 12px;
-    }
-
-    .popup-title {
-      font-size: 15px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .popup-note { margin-bottom: 6px; }
-
-    .popup-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin: 6px 0 8px;
-    }
-
-    .badge {
-      display: inline-block;
-      border-radius: 999px;
-      padding: 3px 7px;
-      font-size: 11px;
-      font-weight: bold;
-      background: #eef2ff;
-      color: #1e3a8a;
-      white-space: nowrap;
-    }
-
-    .badge.open { background: #dcfce7; color: #166534; }
-    .badge.closed { background: #fee2e2; color: #991b1b; }
-    .badge.neutral { background: #f3f4f6; color: #374151; }
-    .badge.rating { background: #fef3c7; color: #92400e; }
-
-    .popup-small {
-      font-size: 12px;
-      color: #555;
-      margin-bottom: 8px;
-    }
-
-    .popup-actions {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-    }
-
-    .popup-actions a {
-      display: inline-block;
-      padding: 7px 9px;
-      border-radius: 999px;
-      background: var(--blue);
-      color: white;
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .popup-actions a.search { background: var(--dark); }
-    .popup-actions a.live { background: #0f766e; }
-
-    .data-note {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-      line-height: 1.3;
-    }
-
-    .vote-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 8px 0;
-      flex-wrap: wrap;
-    }
-
-    .vote-button {
-      background: var(--green);
-      padding: 7px 9px;
-      font-size: 12px;
-    }
-
-    .vote-button.voted,
-    .vote-button:disabled {
-      background: #6b7280;
-      cursor: not-allowed;
-      opacity: 0.85;
-    }
-
-    .vote-count {
-      font-weight: bold;
-      color: #111827;
-      background: #ecfdf5;
-      border-radius: 999px;
-      padding: 5px 8px;
-    }
-
-    @media (max-width: 480px) {
-      header { padding: 10px 11px 8px; }
-      header h1 { font-size: 16px; }
-      header p { font-size: 11px; }
-      .controls { padding: 6px 7px; gap: 5px; }
-      button { font-size: 12px; padding: 8px 9px; }
-      .decision-panel { padding: 6px 7px; }
-      .top-pick { font-size: 11px; padding: 6px 8px; }
-      #status { font-size: 11px; padding: 6px 9px; }
-      .leaflet-popup-content { min-width: 205px; max-width: 235px; font-size: 13px; }
-      .popup-title { font-size: 14px; }
+    @media(max-width:480px){
+      header h1{font-size:19px;}
+      .option{align-items:flex-start; flex-direction:column;}
     }
   </style>
 </head>
 
 <body>
-<div id="app">
-  <header>
-    <h1>PHUKET ARANG</h1>
-    <p>Urban Nook + food, malls, massage, cats, durian, votes & live info</p>
-  </header>
+<header>
+  <h1 id="eventTitle">Group Decision Board</h1>
+  <p id="eventDates">Vote once per decision. Winners update live.</p>
+</header>
 
-  <div class="controls">
-    <button onclick="findMe()">📍 Me</button>
-    <button class="home" onclick="goHome()">🏠 HQ</button>
-    <button onclick="openCheckpoint()">🚗 Checkpoint</button>
-    <button class="secondary" onclick="filterMarkers('all')">All</button>
-    <button class="secondary" onclick="filterMarkers('food')">🍜 Food</button>
-    <button class="secondary" onclick="filterMarkers('mall')">🛍️ Malls</button>
-    <button class="secondary" onclick="filterMarkers('massage')">💆 Massage</button>
-    <button class="secondary" onclick="filterMarkers('cat')">🐱 Cats</button>
-    <button class="secondary" onclick="filterMarkers('durian')">🍈 Durian</button>
-    <button class="secondary" onclick="filterMarkers('attraction')">📸 Sights</button>
-  </div>
+<main>
+  <div id="status">Loading...</div>
 
-  <div class="decision-panel">
-    <div class="decision-title">🏆 Top Picks</div>
-    <div id="topPicks" class="top-picks">Waiting for votes...</div>
-  </div>
+  <section class="section">
+    <h2>Admin</h2>
 
-  <div id="status">Map centred near The Urban Nook. Tap Live Info in any popup for latest Google Maps data.</div>
-  <div id="map"></div>
-</div>
+    <div id="adminLogin">
+      <input id="adminPasscode" type="password" placeholder="Enter admin passcode" />
+      <button class="admin" onclick="loginAdmin()">Admin Login</button>
+    </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <div id="adminControls" class="admin-panel">
+      <label>Event Title</label>
+      <input id="adminEventTitle" placeholder="e.g. JB Trip Decision Board" />
+
+      <label>Event Dates / Subtitle</label>
+      <input id="adminEventDates" placeholder="e.g. 1–3 May 2026" />
+
+      <button class="admin" onclick="saveEventSettings()">Save Event Settings</button>
+
+      <hr style="border:none; border-top:1px solid #ddd6fe; margin:14px 0;" />
+
+      <label>Add New Question</label>
+      <input id="newDecisionTitle" placeholder="e.g. Day 3 Breakfast" />
+      <input id="newDecisionSubtitle" placeholder="e.g. Where should we eat before checkout?" />
+      <button class="admin" onclick="addDecision()">Add Question</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Current Winners</h2>
+    <div id="summary">Waiting for votes...</div>
+    <div id="warnings"></div>
+  </section>
+
+  <section class="section">
+    <h2>Decisions</h2>
+    <div id="decisionBoard"></div>
+  </section>
+</main>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, updateDoc, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    updateDoc,
+    increment,
+    onSnapshot,
+    collection
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyCWhhePl8hpHV12uwr0-4LWmuP1_CIrqYJI",
-    authDomain: "phuket-arang.firebaseapp.com",
-    projectId: "phuket-arang",
-    storageBucket: "phuket-arang.firebasestorage.app",
-    messagingSenderId: "352587072367",
-    appId: "1:352587072367:web:62376cc321b84f57da5e9a"
+    apiKey: "PASTE_YOUR_API_KEY",
+    authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+    projectId: "PASTE_YOUR_PROJECT_ID",
+    storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+    messagingSenderId: "PASTE_YOUR_MESSAGING_SENDER_ID",
+    appId: "PASTE_YOUR_APP_ID"
   };
+
+  const ADMIN_PASSCODE = "joel123";
+  const EVENT_ID = "jb-trip-2026";
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const voteCounts = {};
-  const voteUnsubscribers = {};
-  const voteInProgress = new Set();
 
-  // No-API live info approach:
-  // Ratings/hours below are manual guide values. The Live Info button opens the latest Google Maps listing.
-  const DATA_LAST_CHECKED = "Apr 2026";
-  const DATA_SOURCE = "Manual guide; tap Live Info for latest Google Maps data";
+  let isAdmin = localStorage.getItem("decisionBoardAdmin") === "1";
 
-  const urbanNook = {
-    name: "The Urban Nook",
-    type: "home",
-    lat: 1.4848,
-    lng: 103.7666,
-    address: "14, Jalan Rentaka 2, Taman Sri Tebrau, 80050 Johor Bahru",
-    note: "Group accommodation",
-    hours: "00:00-23:59",
-    rating: "Home base"
-  };
-
-  const map = L.map("map", { zoomControl: true, tap: true }).setView([urbanNook.lat, urbanNook.lng], 15);
-
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-  }).addTo(map);
-
-  setTimeout(() => map.invalidateSize(), 300);
-
-  let userMarker = null;
-  let userCircle = null;
-  let lastUserLocation = null;
-
-  const homeIcon = L.divIcon({ html: "🏠", className: "home-marker", iconSize: [34,34], iconAnchor: [17,17] });
-  const foodIcon = L.divIcon({ html: "🍜", className: "food-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const mallIcon = L.divIcon({ html: "🛍️", className: "mall-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const attractionIcon = L.divIcon({ html: "📸", className: "attraction-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const massageIcon = L.divIcon({ html: "💆", className: "massage-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const catIcon = L.divIcon({ html: "🐱", className: "cat-marker", iconSize: [30,30], iconAnchor: [15,15] });
-  const durianIcon = L.divIcon({ html: "🍈", className: "durian-marker", iconSize: [30,30], iconAnchor: [15,15] });
-
-  function getIcon(type) {
-    if (type === "food") return foodIcon;
-    if (type === "mall") return mallIcon;
-    if (type === "massage") return massageIcon;
-    if (type === "cat") return catIcon;
-    if (type === "durian") return durianIcon;
-    if (type === "attraction") return attractionIcon;
-    return foodIcon;
-  }
-
-  function googleMapsSearch(place) {
-    const query = encodeURIComponent(`${place.name} ${place.address || ""}`);
-    return `https://www.google.com/maps/search/?api=1&query=${query}`;
-  }
-
-  function googleMapsLiveInfo(place) {
-    // Same Google Maps search endpoint, labelled differently for users.
-    // Opens the live listing so users can verify current hours, reviews, crowd level and photos.
-    return googleMapsSearch(place);
-  }
-
-  function googleMapsDirections(place) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=driving`;
-  }
-
-  function googleMapsLocationLink(lat, lng) {
-    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-  }
-
-  function getDistanceKm(lat1, lng1, lat2, lng2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  function distanceFromHome(lat, lng) {
-    const distance = getDistanceKm(urbanNook.lat, urbanNook.lng, lat, lng);
-    if (distance < 1) return `${Math.round(distance * 1000)}m from Urban Nook`;
-    return `${distance.toFixed(1)}km from Urban Nook`;
-  }
-
-  function safeId(name) {
-    return name.replace(/[^a-zA-Z0-9]/g, "");
-  }
-
-  function escapeJsString(text) {
-    return String(text).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-  }
-
-  function voteStorageKey(placeName) {
-    return "phuketArang_voted_" + safeId(placeName);
-  }
-
-  function hasVoted(placeName) {
-    try {
-      return localStorage.getItem(voteStorageKey(placeName)) === "1";
-    } catch (err) {
-      return false;
+  const defaultDecisions = [
+    {
+      id: "day2-lunch",
+      title: "Day 2 Lunch",
+      subtitle: "Where should we eat for lunch on Day 2?",
+      active: true,
+      order: 1,
+      options: [
+        { id: "teck-sing", label: "Teck Sing", note: "Near KSL / group-friendly", active: true },
+        { id: "midvalley", label: "Mid Valley Southkey", note: "Easy mall option, many choices", active: true },
+        { id: "ksl", label: "KSL City Mall", note: "Very convenient, low planning effort", active: true },
+        { id: "delivery", label: "Delivery to Airbnb", note: "Best if people arrive at different timings", active: true }
+      ]
+    },
+    {
+      id: "day2-dinner",
+      title: "Day 2 Dinner",
+      subtitle: "Where should we eat for dinner on Day 2?",
+      active: true,
+      order: 2,
+      options: [
+        { id: "seafood", label: "Seafood Dinner", note: "Proper group meal", active: true },
+        { id: "hotpot", label: "Hotpot", note: "Good for sharing", active: true },
+        { id: "zi-char", label: "Zi Char", note: "Safe and flexible", active: true },
+        { id: "delivery", label: "Delivery to Airbnb", note: "Most logistically simple", active: true }
+      ]
+    },
+    {
+      id: "cat-cafe",
+      title: "Cat Cafe Timing",
+      subtitle: "When should we go cat cafe?",
+      active: true,
+      order: 3,
+      options: [
+        { id: "day2-afternoon", label: "Day 2 Afternoon", note: "After lunch, before dinner", active: true },
+        { id: "day3-morning", label: "Day 3 Morning", note: "Cleaner schedule, less rushed", active: true },
+        { id: "skip", label: "Skip Cat Cafe", note: "Only if schedule too packed", active: true }
+      ]
     }
-  }
-
-  function markVoted(placeName) {
-    try {
-      localStorage.setItem(voteStorageKey(placeName), "1");
-    } catch (err) {
-      console.warn("Could not save vote lock", err);
-    }
-  }
-
-  function unmarkVoted(placeName) {
-    try {
-      localStorage.removeItem(voteStorageKey(placeName));
-    } catch (err) {
-      console.warn("Could not remove vote lock", err);
-    }
-  }
-
-  function formatHours(hours) {
-    if (!hours) return "Hours unknown";
-    if (hours === "00:00-23:59") return "Open 24h / available anytime";
-    return hours;
-  }
-
-  function isOpenNow(hours) {
-    if (!hours || hours === "unknown") return null;
-    if (hours === "00:00-23:59") return true;
-
-    const [start, end] = hours.split("-");
-    if (!start || !end) return null;
-
-    const [sh, sm] = start.split(":").map(Number);
-    const [eh, em] = end.split(":").map(Number);
-    const startMin = sh * 60 + sm;
-    const endMin = eh * 60 + em;
-    const now = new Date();
-    const nowMin = now.getHours() * 60 + now.getMinutes();
-
-    if (endMin >= startMin) return nowMin >= startMin && nowMin <= endMin;
-    return nowMin >= startMin || nowMin <= endMin;
-  }
-
-  function openBadge(place) {
-    const open = isOpenNow(place.hours);
-    if (open === true) return `<span class="badge open">🟢 Open now</span>`;
-    if (open === false) return `<span class="badge closed">🔴 Closed now</span>`;
-    return `<span class="badge neutral">⚪ Hours unknown</span>`;
-  }
-
-  function popupHtml(place) {
-    const voteId = "vote-" + safeId(place.name);
-    const votes = voteCounts[place.name] || 0;
-    const alreadyVoted = hasVoted(place.name);
-    const voteButtonText = alreadyVoted ? "✅ Voted" : "👍 Vote";
-    const voteButtonDisabled = alreadyVoted ? "disabled" : "";
-    const voteButtonClass = alreadyVoted ? "vote-button voted" : "vote-button";
-    const ratingHtml = place.rating ? `<span class="badge rating">⭐ ${place.rating}</span>` : "";
-    const priceHtml = place.price ? `<span class="badge neutral">${place.price}</span>` : "";
-    const hoursHtml = place.hours ? `<span class="badge neutral">🕒 ${formatHours(place.hours)}</span>` : "";
-
-    return `
-      <div class="popup-title">${place.name} <span class="vote-count" id="${voteId}">👍 ${votes}</span></div>
-      <div class="popup-note">${place.note}</div>
-      <div class="popup-meta">
-        ${openBadge(place)}
-        ${ratingHtml}
-        ${priceHtml}
-        ${hoursHtml}
-        <span class="badge neutral">📌 Checked ${place.lastChecked || DATA_LAST_CHECKED}</span>
-      </div>
-      <strong>${distanceFromHome(place.lat, place.lng)}</strong><br><br>
-      <div class="popup-small">${place.address}</div>
-      <div class="data-note">Hours/ratings are a guide. Tap <strong>Live Info</strong> for latest opening hours and Google reviews.</div>
-
-      <div class="vote-row">
-        <button class="${voteButtonClass}" onclick="vote('${escapeJsString(place.name)}')" ${voteButtonDisabled}>${voteButtonText}</button>
-        <span class="vote-count" id="${voteId}-row">👍 ${votes}</span>
-      </div>
-
-      <div class="popup-actions">
-        <a href="${googleMapsDirections(place)}" target="_blank">Directions</a>
-        <a class="live" href="${googleMapsLiveInfo(place)}" target="_blank">Live Info</a>
-        <a class="search" href="${googleMapsSearch(place)}" target="_blank">Maps</a>
-      </div>
-    `;
-  }
-
-  const homeMarker = L.marker([urbanNook.lat, urbanNook.lng], { icon: homeIcon }).addTo(map);
-
-  homeMarker.bindPopup(`
-    <div class="popup-title">🏠 ${urbanNook.name}</div>
-    <div class="popup-note">${urbanNook.note}</div>
-    <div class="popup-meta"><span class="badge open">🟢 Home base</span></div>
-    <div class="popup-small">${urbanNook.address}</div>
-    <div class="popup-actions">
-      <a href="${googleMapsDirections(urbanNook)}" target="_blank">Directions</a>
-      <a class="search" href="${googleMapsSearch(urbanNook)}" target="_blank">Maps</a>
-    </div>
-  `).openPopup();
-
-  L.circle([urbanNook.lat, urbanNook.lng], {
-    radius: 1200,
-    color: "#dc2626",
-    fillColor: "#dc2626",
-    fillOpacity: 0.08
-  }).addTo(map);
-
-  const places = [
-    // Food — near home / group-friendly
-    { name: "Seng Steam Fish Restaurant", type: "food", lat: 1.487916, lng: 103.774656, address: "100, Jalan Keris, Taman Sri Tebrau, 80050 Johor Bahru", note: "Near house · dine-in / takeaway · steamed fish", hours: "11:00-22:00", rating: "4.0", price: "$$" },
-    { name: "Sek Wai Sin JB Pelangi", type: "food", lat: 1.4833, lng: 103.7749, address: "205, Jalan Sri Pelangi, Taman Pelangi, 80400 Johor Bahru", note: "Near house · dine-in / takeaway · seafood noodle", hours: "10:00-21:00", rating: "4.1", price: "$$" },
-    { name: "Farmland Porridge Steamboat", type: "food", lat: 1.4860, lng: 103.7650, address: "15, Jalan Badik 1, Taman Sri Tebrau, 80050 Johor Bahru", note: "Sri Tebrau · dine-in · porridge steamboat", hours: "16:00-01:00", rating: "4.1", price: "$$" },
-    { name: "Hai Kee Seafood Restaurant", type: "food", lat: 1.4863, lng: 103.7653, address: "No. 21, Jalan Badik 1, Taman Sri Tebrau, 80050 Johor Bahru", note: "Sri Tebrau hawker centre · dine-in / takeaway", hours: "17:00-01:00", rating: "4.0", price: "$$" },
-    { name: "Project Smoked", type: "food", lat: 1.4872, lng: 103.7667, address: "224, Jalan Sutera, Taman Sentosa, 80150 Johor Bahru", note: "American BBQ · dine-in / takeaway", hours: "12:00-22:00", rating: "4.5", price: "$$" },
-    { name: "Restoran Pekin Taman Sentosa", type: "food", lat: 1.4929, lng: 103.7758, address: "38, Jalan Baldu 5, Taman Sentosa, 80150 Johor Bahru", note: "Chinese restaurant · suckling pig", hours: "11:00-22:00", rating: "4.1", price: "$$$" },
-    { name: "Teck Sing Restaurant", type: "food", lat: 1.4871, lng: 103.7662, address: "3 & 5, Jalan Sutera Satu, Taman Sentosa, 80150 Johor Bahru", note: "Paper-baked herbal chicken", hours: "11:00-22:00", rating: "4.2", price: "$$" },
-    { name: "Kam Long Ah Zai Curry Fish Head", type: "food", lat: 1.4596, lng: 103.7643, address: "74, Jalan Wong Ah Fook, 80000 Johor Bahru", note: "Famous curry fish head", hours: "08:00-16:00", rating: "4.0", price: "$$" },
-    { name: "Canton-i @ Johor Bahru City Square", type: "food", lat: 1.4626, lng: 103.7634, address: "Lot J3-05, Level 3, Johor Bahru City Square", note: "Hong Kong cuisine", hours: "10:00-22:00", rating: "4.0", price: "$$" },
-    { name: "Bottega JB", type: "food", lat: 1.4816, lng: 103.7660, address: "8, Jalan Meranti, Johor Bahru, 80250", note: "Italian cuisine", hours: "12:00-22:00", rating: "4.4", price: "$$$" },
-    { name: "Warakuya Japanese Restaurant", type: "food", lat: 1.4818, lng: 103.7735, address: "43, Jalan Kuning 2, Taman Pelangi, 80400 Johor Bahru", note: "Japanese food", hours: "11:30-22:30", rating: "4.2", price: "$$" },
-    { name: "Me & My RoRo", type: "food", lat: 1.4822, lng: 103.7722, address: "7, Jalan Kuning 1, Taman Pelangi, 80400 Johor Bahru", note: "Japanese handroll & tapas bar", hours: "12:00-23:00", rating: "4.4", price: "$$" },
-    { name: "Restoran Ban Heong Seng", type: "food", lat: 1.536913, lng: 103.674204, address: "113, Jalan Impian Emas 22, Taman Impian Emas, 81300 Skudai", note: "Clay-baked beggar chicken & duck", hours: "11:00-21:00", rating: "4.1", price: "$$" },
-    { name: "Restoran Pekin Johor Jaya", type: "food", lat: 1.52387, lng: 103.80706, address: "1, Jalan Masai Baru, Taman Johor Jaya, 81100 Johor Bahru", note: "Chinese restaurant", hours: "11:00-22:00", rating: "4.1", price: "$$$" },
-    { name: "Ba Jiu Men Hotpot", type: "food", lat: 1.5585, lng: 103.7825, address: "Block B, G10, Jalan Jaya Putra 1/1, Bandar Jaya Putra", note: "Hotpot", hours: "12:00-02:00", rating: "4.4", price: "$$$" },
-
-    // More food options
-    { name: "Restoran Hua Mui", type: "food", lat: 1.4575, lng: 103.7618, address: "131, Jalan Trus, Bandar Johor Bahru, 80000 Johor Bahru", note: "Old-school Hainanese kopitiam", hours: "08:00-18:00", rating: "4.1", price: "$" },
-    { name: "IT Roo Café", type: "food", lat: 1.4570, lng: 103.7612, address: "17, Jalan Dhoby, Bandar Johor Bahru, 80000 Johor Bahru", note: "Chicken chop / heritage café area", hours: "10:00-21:00", rating: "4.0", price: "$$" },
-    { name: "Hiap Joo Bakery", type: "food", lat: 1.4568, lng: 103.7614, address: "13, Jalan Tan Hiok Nee, Bandar Johor Bahru, 80000 Johor Bahru", note: "Banana cake / bakery stop", hours: "07:30-17:00", rating: "4.2", price: "$" },
-    { name: "Salahuddin Bakery", type: "food", lat: 1.4582, lng: 103.7602, address: "26, Jalan Dhoby, Bandar Johor Bahru, 80000 Johor Bahru", note: "Traditional bakery", hours: "09:00-18:00", rating: "4.1", price: "$" },
-    { name: "Oriental Kopi @ Mid Valley Southkey", type: "food", lat: 1.5008, lng: 103.7778, address: "The Mall, Mid Valley Southkey, Johor Bahru", note: "Group-friendly mall dining", hours: "09:00-22:00", rating: "4.2", price: "$$" },
-    { name: "Din Tai Fung @ Mid Valley Southkey", type: "food", lat: 1.5008, lng: 103.7778, address: "The Mall, Mid Valley Southkey, Johor Bahru", note: "Easy group dining inside mall", hours: "10:00-22:00", rating: "4.2", price: "$$$" },
-    { name: "Nimmies Pastry Café", type: "food", lat: 1.4847, lng: 103.7709, address: "Taman Pelangi / Sri Tebrau area, Johor Bahru", note: "Café / pastries option near house", hours: "09:00-22:00", rating: "4.3", price: "$$" },
-    { name: "Keijometo", type: "food", lat: 1.4927, lng: 103.7692, address: "Taman Sentosa, Johor Bahru", note: "Japanese-inspired café option", hours: "11:30-21:30", rating: "4.3", price: "$$" },
-    { name: "Principle Café by T.A.M", type: "food", lat: 1.4786, lng: 103.7639, address: "Taman Pelangi / Taman Abad area, Johor Bahru", note: "Café brunch option", hours: "09:30-18:00", rating: "4.3", price: "$$" },
-    { name: "Miyakori Coffee", type: "food", lat: 1.4825, lng: 103.7728, address: "Taman Pelangi, Johor Bahru", note: "Coffee / café option", hours: "10:00-22:00", rating: "4.2", price: "$$" },
-
-    // Malls
-    { name: "KSL City Mall", type: "mall", lat: 1.4852, lng: 103.7622, address: "33, Jalan Seladang, Taman Abad, 80250 Johor Bahru", note: "Very near house · food, shopping, massage", hours: "10:00-22:00", rating: "4.1", price: "Mall" },
-    { name: "The Mall, Mid Valley Southkey", type: "mall", lat: 1.5008, lng: 103.7778, address: "1, Persiaran Southkey 1, Southkey, 80150 Johor Bahru", note: "Large mall · good for group shopping and food", hours: "10:00-22:00", rating: "4.5", price: "Mall" },
-    { name: "Plaza Pelangi", type: "mall", lat: 1.4817, lng: 103.7745, address: "Jalan Kuning, Taman Pelangi, Johor Bahru", note: "Nearby mall", hours: "10:00-22:00", rating: "3.8", price: "Mall" },
-    { name: "JB City Square", type: "mall", lat: 1.4626, lng: 103.7634, address: "106-108, Jalan Wong Ah Fook, 80000 Johor Bahru", note: "Near checkpoint / JB Sentral", hours: "10:00-22:00", rating: "4.2", price: "Mall" },
-    { name: "KOMTAR JBCC", type: "mall", lat: 1.4634, lng: 103.7621, address: "Johor Bahru City Centre, Jalan Tun Abdul Razak, 80000 Johor Bahru", note: "Connected to City Square area", hours: "10:00-22:00", rating: "4.1", price: "Mall" },
-    { name: "Paradigm Mall Johor Bahru", type: "mall", lat: 1.5153, lng: 103.6857, address: "Jalan Skudai, 81200 Johor Bahru", note: "Large mall further out", hours: "10:00-22:00", rating: "4.3", price: "Mall" },
-    { name: "Toppen Shopping Centre", type: "mall", lat: 1.5527, lng: 103.7965, address: "33A, Jalan Desa Tebrau, Taman Desa Tebrau, 81100 Johor Bahru", note: "IKEA-linked mall / Tebrau area", hours: "10:00-22:00", rating: "4.4", price: "Mall" },
-    { name: "AEON Mall Tebrau City", type: "mall", lat: 1.5503, lng: 103.7968, address: "1, Jalan Desa Tebrau, Taman Desa Tebrau, 81100 Johor Bahru", note: "Large mall beside Toppen / IKEA area", hours: "10:00-22:00", rating: "4.4", price: "Mall" },
-    { name: "Sutera Mall", type: "mall", lat: 1.5168, lng: 103.6699, address: "1, Jalan Sutera Tanjung 8/4, Taman Sutera Utama, 81300 Skudai", note: "Skudai / Sutera area mall", hours: "10:00-22:00", rating: "4.1", price: "Mall" },
-
-    // Massage
-    { name: "BKK Thai Spa @ KSL City Mall", type: "massage", lat: 1.4852, lng: 103.7622, address: "LG-001, KSL City Mall, 33 Jalan Seladang, Taman Abad", note: "Massage option inside KSL City Mall", hours: "10:00-22:00", rating: "4.1", price: "$$" },
-    { name: "Thai Odyssey @ KSL City", type: "massage", lat: 1.4852, lng: 103.7622, address: "L2-001, Level 2, KSL City, 33 Jalan Seladang, Taman Abad", note: "Thai massage chain inside KSL", hours: "10:00-22:00", rating: "4.2", price: "$$" },
-    { name: "Lotus Wellness Spa @ KSL City", type: "massage", lat: 1.4852, lng: 103.7622, address: "KSL City Mall, 33 Jalan Seladang, Taman Abad", note: "Massage / wellness spa in KSL area", hours: "10:00-22:00", rating: "4.0", price: "$$" },
-    { name: "Hanoi 9 Spa @ KSL City", type: "massage", lat: 1.4852, lng: 103.7622, address: "Level 6 Car Park Area, KSL City Mall, Jalan Seladang", note: "Massage option at KSL City Mall", hours: "10:00-01:00", rating: "4.0", price: "$$" },
-    { name: "SQ Massage & Nails @ KSL", type: "massage", lat: 1.4852, lng: 103.7622, address: "Level 2-01A, KSL City Mall, Johor Bahru", note: "Massage and nails at KSL", hours: "10:00-22:00", rating: "4.0", price: "$$" },
-    { name: "Bangkok Spa Taman Pelangi", type: "massage", lat: 1.4816, lng: 103.7726, address: "Taman Pelangi, Johor Bahru", note: "Massage option near Pelangi", hours: "11:00-01:00", rating: "4.2", price: "$$" },
-    { name: "Thai Odyssey @ Mid Valley Southkey", type: "massage", lat: 1.5008, lng: 103.7778, address: "TM-011, The Mall, Mid Valley Southkey, Johor Bahru", note: "Massage option inside Mid Valley Southkey", hours: "10:00-22:00", rating: "4.2", price: "$$" },
-    { name: "Thai Odyssey @ KOMTAR JBCC", type: "massage", lat: 1.4634, lng: 103.7621, address: "221C, 2nd Floor, KOMTAR JBCC, Johor Bahru City Centre", note: "Massage option near City Square / CIQ", hours: "10:00-22:00", rating: "4.1", price: "$$" },
-    { name: "Family Thai Spa Taman Sentosa", type: "massage", lat: 1.4910, lng: 103.7712, address: "Taman Sentosa, Johor Bahru", note: "Massage option around Taman Sentosa", hours: "11:00-01:00", rating: "4.1", price: "$$" },
-    { name: "Walea Spa & Retreat", type: "massage", lat: 1.4918, lng: 103.7750, address: "Taman Sentosa / Southkey area, Johor Bahru", note: "Spa / massage option near Southkey area", hours: "11:00-23:00", rating: "4.3", price: "$$$" },
-    { name: "Kaki-Kaki Reflexology", type: "massage", lat: 1.4839, lng: 103.7627, address: "KSL / Taman Abad area, Johor Bahru", note: "Reflexology option near accommodation", hours: "10:00-00:00", rating: "4.0", price: "$$" },
-    { name: "Bangkok Family Spa", type: "massage", lat: 1.4869, lng: 103.7718, address: "Taman Sentosa / Pelangi area, Johor Bahru", note: "Group massage option", hours: "11:00-01:00", rating: "4.0", price: "$$" },
-
-    // Cat cafes / pet cafes
-    { name: "C.A.T.S Cafe Johor Bahru", type: "cat", lat: 1.4649, lng: 103.7525, address: "31A, Jalan Abdul Samad, Lorong 2C, 80100 Johor Bahru", note: "Cat cafe", hours: "13:00-21:00", rating: "4.3", price: "$" },
-    { name: "Meow Me Cat House", type: "cat", lat: 1.5583, lng: 103.7818, address: "28-01, Jalan Austin Height 7/7, Taman Mount Austin, 81100 Johor Bahru", note: "Cat cafe / cat house in Mount Austin", hours: "12:00-22:00", rating: "4.4", price: "$" },
-    { name: "Chucky Cat Cafe @ KOMTAR JBCC", type: "cat", lat: 1.4634, lng: 103.7621, address: "L302, KOMTAR JBCC, Johor Bahru", note: "Cat cafe branch near City Square", hours: "10:00-22:00", rating: "4.2", price: "$" },
-    { name: "Chucky Cat Cafe @ Paradigm Mall JB", type: "cat", lat: 1.5153, lng: 103.6857, address: "UG28, Paradigm Mall Johor Bahru", note: "Cat cafe branch inside Paradigm Mall", hours: "10:00-22:00", rating: "4.2", price: "$" },
-    { name: "Chucky Cat Cafe @ Toppen", type: "cat", lat: 1.5527, lng: 103.7965, address: "L308, Toppen Shopping Centre, Johor Bahru", note: "Cat cafe branch in Tebrau area", hours: "10:00-22:00", rating: "4.2", price: "$" },
-    { name: "Cat Times", type: "cat", lat: 1.5559, lng: 103.7815, address: "70-02, Jalan Jaya Putra 7/2, Bandar Jaya Putra, 81100 Johor Bahru", note: "Cat cafe in Bandar Jaya Putra", hours: "11:00-22:00", rating: "4.4", price: "$" },
-    { name: "Coffee Cat House", type: "cat", lat: 1.5552, lng: 103.7826, address: "37, Jalan Jaya Putra 7/3, Bandar Jaya Putra, 81100 Johor Bahru", note: "Cat-themed café", hours: "11:00-22:00", rating: "4.2", price: "$" },
-    { name: "KopiCat Cafe", type: "cat", lat: 1.4925, lng: 103.7760, address: "Southkey / Taman Sentosa area, Johor Bahru", note: "Cat-themed cafe option", hours: "11:00-21:00", rating: "4.1", price: "$" },
-    { name: "Neko Cat Cafe Mount Austin", type: "cat", lat: 1.5590, lng: 103.7810, address: "Mount Austin, Johor Bahru", note: "Cat cafe option in Mount Austin", hours: "11:00-22:00", rating: "4.2", price: "$" },
-
-    // Durian
-    { name: "Ah Tong Durian", type: "durian", lat: 1.4860, lng: 103.7610, address: "34, 2, Jalan Serigala, Taman Abad, 80250 Johor Bahru", note: "Durian near KSL / Taman Abad · seasonal availability", hours: "12:00-23:00", rating: "4.2", price: "Seasonal" },
-    { name: "JS Deluxe Durian", type: "durian", lat: 1.4853, lng: 103.7620, address: "32, Jalan Seladang, Taman Abad, 80250 Johor Bahru", note: "Durian near KSL area", hours: "12:00-23:00", rating: "4.2", price: "Seasonal" },
-    { name: "KSL Durian Shops", type: "durian", lat: 1.4852, lng: 103.7622, address: "KSL City Mall area, 33 Jalan Seladang, Taman Abad, 80250 Johor Bahru", note: "Durian stalls around KSL area · check current opening", hours: "12:00-23:30", rating: "4.0", price: "Seasonal" },
-    { name: "Taman Pelangi Durian Area", type: "durian", lat: 1.4835, lng: 103.7740, address: "Taman Pelangi, Johor Bahru", note: "General durian area / seasonal stalls · verify before going", hours: "12:00-23:00", rating: "4.0", price: "Seasonal" },
-    { name: "Machap King Durian", type: "durian", lat: 1.5220, lng: 103.7905, address: "37, Jalan Molek 2/1, Taman Molek, 81100 Johor Bahru", note: "Further out · durian option in Taman Molek", hours: "12:00-23:00", rating: "4.2", price: "Seasonal" },
-
-    // Attractions
-    { name: "Jalan Tan Hiok Nee", type: "attraction", lat: 1.4569, lng: 103.7615, address: "Jalan Tan Hiok Nee, Bandar Johor Bahru", note: "Heritage street, cafes, photo spots", hours: "00:00-23:59", rating: "4.2", price: "Free" },
-    { name: "Johor Old Chinese Temple", type: "attraction", lat: 1.4595, lng: 103.7631, address: "Lot 653, Jalan Trus, Bandar Johor Bahru", note: "Historic temple near City Square", hours: "07:30-17:30", rating: "4.3", price: "Free" },
-    { name: "Danga Bay", type: "attraction", lat: 1.4755, lng: 103.7231, address: "Danga Bay, Johor Bahru", note: "Waterfront area", hours: "00:00-23:59", rating: "4.0", price: "Free" }
   ];
 
-  const markerLayer = L.layerGroup().addTo(map);
-  const allMarkers = [];
+  let decisions = JSON.parse(JSON.stringify(defaultDecisions));
+  const voteCounts = {};
+  const finalChoices = {};
+  const eventSettings = {};
 
-  places.forEach(place => {
-    const marker = L.marker([place.lat, place.lng], { icon: getIcon(place.type) });
-    marker.placeType = place.type;
-    marker.placeData = place;
+  function slugify(text) {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  }
 
-    // Important: use a function so Leaflet rebuilds the popup from the latest
-    // voteCounts every time the marker is opened. This fixes stale popup counts.
-    marker.bindPopup(() => popupHtml(place));
+  function voteKey(decisionId) {
+    return `decisionBoard_${EVENT_ID}_${decisionId}`;
+  }
 
-    // Extra safety: when the popup opens, immediately refresh its content again
-    // in case Firebase votes arrived after the marker was first created.
-    marker.on("popupopen", () => {
-      marker.setPopupContent(popupHtml(place));
-    });
+  function hasVoted(decisionId) {
+    return localStorage.getItem(voteKey(decisionId)) === "1";
+  }
 
-    allMarkers.push(marker);
-    markerLayer.addLayer(marker);
-    listenVotes(place.name);
-  });
+  function markVoted(decisionId) {
+    localStorage.setItem(voteKey(decisionId), "1");
+  }
 
-  async function vote(placeName) {
-    if (hasVoted(placeName)) {
-      document.getElementById("status").textContent = `You already voted for ${placeName} on this device.`;
-      refreshOpenPopup(placeName);
+  function votePath(decisionId, optionId) {
+    return doc(db, "events", EVENT_ID, "votes", decisionId, "options", optionId);
+  }
+
+  function finalPath(decisionId) {
+    return doc(db, "events", EVENT_ID, "finalChoices", decisionId);
+  }
+
+  function decisionConfigPath(decisionId) {
+    return doc(db, "events", EVENT_ID, "decisionConfig", decisionId);
+  }
+
+  function optionConfigPath(decisionId, optionId) {
+    return doc(db, "events", EVENT_ID, "decisionConfig", decisionId, "options", optionId);
+  }
+
+  function eventSettingsPath() {
+    return doc(db, "events", EVENT_ID, "settings", "main");
+  }
+
+  function escapeHtml(text = "") {
+    return String(text)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderAdminState() {
+    if (!isAdmin) return;
+    document.getElementById("adminLogin").style.display = "none";
+    document.getElementById("adminControls").classList.add("admin-visible");
+  }
+
+  function loginAdmin() {
+    const pass = document.getElementById("adminPasscode").value;
+
+    if (pass === ADMIN_PASSCODE) {
+      isAdmin = true;
+      localStorage.setItem("decisionBoardAdmin", "1");
+      renderAdminState();
+      renderBoard();
+      document.getElementById("status").textContent = "Admin mode enabled.";
+    } else {
+      alert("Wrong passcode.");
+    }
+  }
+
+  async function saveEventSettings() {
+    const title = document.getElementById("adminEventTitle").value.trim();
+    const dates = document.getElementById("adminEventDates").value.trim();
+
+    await setDoc(eventSettingsPath(), {
+      title: title || "Group Decision Board",
+      dates: dates || "Vote once per decision. Winners update live.",
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    document.getElementById("status").textContent = "Event settings saved.";
+  }
+
+  function applyEventSettings() {
+    document.getElementById("eventTitle").textContent = eventSettings.title || "Group Decision Board";
+    document.getElementById("eventDates").textContent = eventSettings.dates || "Vote once per decision. Winners update live.";
+
+    if (isAdmin) {
+      document.getElementById("adminEventTitle").value = eventSettings.title || "";
+      document.getElementById("adminEventDates").value = eventSettings.dates || "";
+    }
+  }
+
+  function renderBoard() {
+    const board = document.getElementById("decisionBoard");
+    const activeDecisions = decisions
+      .filter(d => d.active !== false)
+      .sort((a, b) => (a.order || 9999) - (b.order || 9999));
+
+    if (!activeDecisions.length) {
+      board.innerHTML = "<p>No active questions yet.</p>";
+      renderSummary();
       return;
     }
 
-    if (voteInProgress.has(placeName)) {
-      document.getElementById("status").textContent = `Vote for ${placeName} is already being submitted...`;
+    board.innerHTML = activeDecisions.map(decision => {
+      const activeOptions = (decision.options || []).filter(o => o.active !== false);
+
+      const optionsHtml = activeOptions.map(option => {
+        const count = voteCounts[decision.id]?.[option.id] || 0;
+        const disabled = hasVoted(decision.id) ? "disabled" : "";
+        const buttonText = hasVoted(decision.id) ? "Voted" : "Vote";
+
+        return `
+          <div class="option">
+            <div class="option-main">
+              <div class="option-title">${escapeHtml(option.label)}</div>
+              <div class="option-note">${escapeHtml(option.note || "")}</div>
+            </div>
+            <div class="votes">👍 ${count}</div>
+            <button onclick="vote('${decision.id}', '${option.id}')" ${disabled}>${buttonText}</button>
+            ${isAdmin ? `<button class="delete small" onclick="dropOption('${decision.id}', '${option.id}')">Drop</button>` : ""}
+          </div>
+        `;
+      }).join("");
+
+      const winner = getWinner(decision.id);
+      const finalChoice = finalChoices[decision.id];
+
+      return `
+        <div class="decision-card">
+          <div class="decision-title">${escapeHtml(decision.title)}</div>
+          <div class="decision-subtitle">${escapeHtml(decision.subtitle || "")}</div>
+
+          ${optionsHtml || "<p style='font-size:13px;color:#6b7280;'>No options yet.</p>"}
+
+          <div class="winner">
+            Current winner: ${winner ? escapeHtml(winner.label) + " (" + winner.votes + " votes)" : "No votes yet"}
+          </div>
+
+          ${finalChoice ? `<div class="final">Finalised: ${escapeHtml(finalChoice.label)}</div>` : ""}
+
+          <div class="actions">
+            <button class="finalise" onclick="finaliseDecision('${decision.id}')">Finalise Current Winner</button>
+            <button class="reset" onclick="resetMyVote('${decision.id}')">Reset My Vote</button>
+          </div>
+
+          ${isAdmin ? `
+            <div class="admin-panel admin-visible">
+              <label>Edit Question</label>
+              <input id="editTitle-${decision.id}" value="${escapeHtml(decision.title)}" />
+              <input id="editSubtitle-${decision.id}" value="${escapeHtml(decision.subtitle || "")}" />
+              <button class="admin" onclick="editDecision('${decision.id}')">Save Question</button>
+              <button class="delete" onclick="dropDecision('${decision.id}')">Drop Question</button>
+
+              <hr style="border:none; border-top:1px solid #ddd6fe; margin:14px 0;" />
+
+              <label>Add Option</label>
+              <input id="newLabel-${decision.id}" placeholder="Option name e.g. Restoran Todak" />
+              <input id="newNote-${decision.id}" placeholder="Short note e.g. seafood / good for group" />
+              <button class="admin" onclick="addOption('${decision.id}')">Add Option</button>
+            </div>
+          ` : ""}
+        </div>
+      `;
+    }).join("");
+
+    renderSummary();
+    renderAdminState();
+  }
+
+  function getWinner(decisionId) {
+    const decision = decisions.find(d => d.id === decisionId && d.active !== false);
+    if (!decision) return null;
+
+    const ranked = (decision.options || [])
+      .filter(option => option.active !== false)
+      .map(option => ({
+        ...option,
+        votes: voteCounts[decisionId]?.[option.id] || 0
+      }))
+      .sort((a, b) => b.votes - a.votes);
+
+    if (!ranked.length || ranked[0].votes === 0) return null;
+    return ranked[0];
+  }
+
+  async function vote(decisionId, optionId) {
+    if (hasVoted(decisionId)) {
+      document.getElementById("status").textContent = "You already voted for this question on this device.";
       return;
     }
-
-    voteInProgress.add(placeName);
-    document.getElementById("status").textContent = `Submitting vote for ${placeName}...`;
-
-    const ref = doc(db, "votes", placeName);
 
     try {
-      await updateDoc(ref, { count: increment(1) });
-      markVoted(placeName);
-      refreshOpenPopup(placeName);
-      document.getElementById("status").textContent = `Voted for ${placeName}.`;
-    } catch (err) {
+      const ref = votePath(decisionId, optionId);
+
       try {
+        await updateDoc(ref, { count: increment(1) });
+      } catch {
         await setDoc(ref, { count: 1 });
-        markVoted(placeName);
-        refreshOpenPopup(placeName);
-        document.getElementById("status").textContent = `Voted for ${placeName}.`;
-      } catch (finalErr) {
-        unmarkVoted(placeName);
-        console.error("Vote failed", finalErr);
-        document.getElementById("status").textContent = "Vote failed. Please try again.";
-        alert("Vote failed. Please try again.");
       }
-    } finally {
-      voteInProgress.delete(placeName);
+
+      markVoted(decisionId);
+      document.getElementById("status").textContent = "Vote submitted.";
+      renderBoard();
+    } catch (err) {
+      console.error(err);
+      document.getElementById("status").textContent = "Vote failed. Check Firebase config/rules.";
     }
   }
 
-  function listenVotes(placeName) {
-    if (voteUnsubscribers[placeName]) return;
+  async function addDecision() {
+    if (!isAdmin) return alert("Admin only.");
 
-    const ref = doc(db, "votes", placeName);
-    voteUnsubscribers[placeName] = onSnapshot(ref, (docSnap) => {
-      const count = docSnap.exists() ? (docSnap.data().count || 0) : 0;
-      voteCounts[placeName] = count;
+    const title = document.getElementById("newDecisionTitle").value.trim();
+    const subtitle = document.getElementById("newDecisionSubtitle").value.trim();
 
-      const el = document.getElementById("vote-" + safeId(placeName));
-      if (el) el.textContent = `👍 ${count}`;
-      const rowEl = document.getElementById("vote-" + safeId(placeName) + "-row");
-      if (rowEl) rowEl.textContent = `👍 ${count}`;
+    if (!title) return alert("Enter a question title.");
 
-      refreshOpenPopup(placeName);
-      updateTopPicks();
-    }, (err) => {
-      console.error("Vote listener error", err);
-      document.getElementById("status").textContent = "Vote sync issue. Check Firestore rules.";
+    const decisionId = slugify(title) || Date.now().toString();
+
+    await setDoc(decisionConfigPath(decisionId), {
+      id: decisionId,
+      title,
+      subtitle,
+      active: true,
+      order: Date.now(),
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
+    document.getElementById("newDecisionTitle").value = "";
+    document.getElementById("newDecisionSubtitle").value = "";
+
+    document.getElementById("status").textContent = "Question added.";
+  }
+
+  async function editDecision(decisionId) {
+    if (!isAdmin) return alert("Admin only.");
+
+    const title = document.getElementById(`editTitle-${decisionId}`).value.trim();
+    const subtitle = document.getElementById(`editSubtitle-${decisionId}`).value.trim();
+
+    if (!title) return alert("Question title cannot be empty.");
+
+    await setDoc(decisionConfigPath(decisionId), {
+      id: decisionId,
+      title,
+      subtitle,
+      active: true,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    document.getElementById("status").textContent = "Question updated.";
+  }
+
+  async function dropDecision(decisionId) {
+    if (!isAdmin) return alert("Admin only.");
+
+    const confirmed = confirm("Drop this question from the board?");
+    if (!confirmed) return;
+
+    await setDoc(decisionConfigPath(decisionId), {
+      id: decisionId,
+      active: false,
+      droppedAt: new Date().toISOString()
+    }, { merge: true });
+
+    document.getElementById("status").textContent = "Question dropped.";
+  }
+
+  async function addOption(decisionId) {
+    if (!isAdmin) return alert("Admin only.");
+
+    const labelInput = document.getElementById(`newLabel-${decisionId}`);
+    const noteInput = document.getElementById(`newNote-${decisionId}`);
+
+    const label = labelInput.value.trim();
+    const note = noteInput.value.trim();
+
+    if (!label) return alert("Enter an option name.");
+
+    const optionId = slugify(label) || Date.now().toString();
+
+    await setDoc(optionConfigPath(decisionId, optionId), {
+      id: optionId,
+      label,
+      note,
+      active: true,
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+
+    labelInput.value = "";
+    noteInput.value = "";
+    document.getElementById("status").textContent = "Option added.";
+  }
+
+  async function dropOption(decisionId, optionId) {
+    if (!isAdmin) return alert("Admin only.");
+
+    const confirmed = confirm("Drop this option from the board? Existing votes remain but option will be hidden.");
+    if (!confirmed) return;
+
+    await setDoc(optionConfigPath(decisionId, optionId), {
+      id: optionId,
+      active: false,
+      droppedAt: new Date().toISOString()
+    }, { merge: true });
+
+    document.getElementById("status").textContent = "Option dropped.";
+  }
+
+  async function finaliseDecision(decisionId) {
+    const winner = getWinner(decisionId);
+    if (!winner) return alert("No winner yet.");
+
+    await setDoc(finalPath(decisionId), {
+      optionId: winner.id,
+      label: winner.label,
+      finalisedAt: new Date().toISOString()
     });
+
+    document.getElementById("status").textContent = `${winner.label} finalised.`;
   }
 
-  function refreshOpenPopup(placeName) {
-    const openMarker = allMarkers.find(marker => marker.isPopupOpen && marker.isPopupOpen());
-    if (!openMarker || !openMarker.placeData || openMarker.placeData.name !== placeName) return;
-    openMarker.setPopupContent(popupHtml(openMarker.placeData));
+  function resetMyVote(decisionId) {
+    localStorage.removeItem(voteKey(decisionId));
+    document.getElementById("status").textContent = "Local vote lock reset. Firebase vote count is unchanged.";
+    renderBoard();
   }
 
-  function updateTopPicks() {
-    const topPicksEl = document.getElementById("topPicks");
-    const ranked = [...places]
-      .map(place => ({ ...place, votes: voteCounts[place.name] || 0 }))
-      .sort((a, b) => {
-        if (b.votes !== a.votes) return b.votes - a.votes;
-        if ((b.rating || 0) !== (a.rating || 0)) return Number(b.rating || 0) - Number(a.rating || 0);
-        return getDistanceKm(urbanNook.lat, urbanNook.lng, a.lat, a.lng) - getDistanceKm(urbanNook.lat, urbanNook.lng, b.lat, b.lng);
-      })
-      .slice(0, 5);
+  function renderSummary() {
+    const summary = document.getElementById("summary");
+    const activeDecisions = decisions
+      .filter(d => d.active !== false)
+      .sort((a, b) => (a.order || 9999) - (b.order || 9999));
 
-    if (!ranked.length || ranked.every(place => place.votes === 0)) {
-      topPicksEl.innerHTML = `<button class="top-pick" onclick="decideForMe()">No votes yet · tap 🎲 Decide</button>`;
+    if (!activeDecisions.length) {
+      summary.innerHTML = "No active questions yet.";
+      renderWarnings();
       return;
     }
 
-    topPicksEl.innerHTML = ranked.map((place, index) => `
-      <button class="top-pick" onclick="focusPlace('${escapeJsString(place.name)}')">
-        ${index + 1}. ${place.name} · 👍 ${place.votes}
-      </button>
-    `).join("");
+    summary.innerHTML = activeDecisions.map(decision => {
+      const finalChoice = finalChoices[decision.id];
+      const winner = getWinner(decision.id);
+
+      return `
+        <div style="margin-bottom:8px;">
+          <strong>${escapeHtml(decision.title)}:</strong>
+          ${finalChoice ? escapeHtml(finalChoice.label) + " ✅" : winner ? escapeHtml(winner.label) : "No votes yet"}
+        </div>
+      `;
+    }).join("");
+
+    renderWarnings();
   }
 
-  function focusPlace(placeName) {
-    const marker = allMarkers.find(m => m.placeData && m.placeData.name === placeName);
-    if (!marker) return;
-    map.setView(marker.getLatLng(), 17);
-    marker.openPopup();
-    document.getElementById("status").textContent = `Focused on ${placeName}.`;
+  function renderWarnings() {
+    const warnings = document.getElementById("warnings");
+
+    const lunch = finalChoices["day2-lunch"]?.optionId || getWinner("day2-lunch")?.id;
+    const dinner = finalChoices["day2-dinner"]?.optionId || getWinner("day2-dinner")?.id;
+    const catCafe = finalChoices["cat-cafe"]?.optionId || getWinner("cat-cafe")?.id;
+
+    const messages = [];
+
+    if (catCafe === "day2-afternoon" && lunch === "delivery") {
+      messages.push("Cat cafe on Day 2 afternoon may clash with a slow lunch at the Airbnb.");
+    }
+
+    if (catCafe === "day2-afternoon" && dinner === "seafood") {
+      messages.push("Cat cafe + seafood dinner on Day 2 may be a heavier schedule.");
+    }
+
+    if (catCafe === "day3-morning") {
+      messages.push("Cat cafe on Day 3 morning keeps Day 2 cleaner and less rushed.");
+    }
+
+    warnings.innerHTML = messages.map(m => `<div class="warning">${escapeHtml(m)}</div>`).join("");
   }
 
-  function decideForMe() {
-    const candidates = [...places].filter(place => place.type !== "attraction");
-    const voted = candidates
-      .map(place => ({ ...place, votes: voteCounts[place.name] || 0, open: isOpenNow(place.hours) }))
-      .sort((a, b) => {
-        if ((b.votes || 0) !== (a.votes || 0)) return (b.votes || 0) - (a.votes || 0);
-        if (b.open !== a.open) return b.open === true ? 1 : -1;
-        if (Number(b.rating || 0) !== Number(a.rating || 0)) return Number(b.rating || 0) - Number(a.rating || 0);
-        return getDistanceKm(urbanNook.lat, urbanNook.lng, a.lat, a.lng) - getDistanceKm(urbanNook.lat, urbanNook.lng, b.lat, b.lng);
+  function rebuildDefaultDecision(decision) {
+    const existing = decisions.find(d => d.id === decision.id);
+    if (!existing) {
+      decisions.push(JSON.parse(JSON.stringify(decision)));
+    }
+  }
+
+  function listenToDecisionConfig() {
+    defaultDecisions.forEach(rebuildDefaultDecision);
+
+    const decisionRef = collection(db, "events", EVENT_ID, "decisionConfig");
+
+    onSnapshot(decisionRef, snapshot => {
+      const decisionMap = {};
+
+      defaultDecisions.forEach(d => {
+        decisionMap[d.id] = JSON.parse(JSON.stringify(d));
       });
-    const pick = voted.find(place => place.votes > 0) || voted[0];
-    if (!pick) return;
-    focusPlace(pick.name);
-    document.getElementById("status").textContent = `Decision: ${pick.name} · 👍 ${voteCounts[pick.name] || 0} · ⭐ ${pick.rating || "n/a"}.`;
-  }
 
-  function filterMarkers(type) {
-    markerLayer.clearLayers();
-    const nowFiltered = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (!data.id) return;
 
-    allMarkers.forEach(marker => {
-      const place = marker.placeData;
-      let show = false;
-
-      if (type === "all") show = true;
-      else if (type === "open") show = isOpenNow(place.hours) === true;
-      else if (type === "nearby") show = getDistanceKm(urbanNook.lat, urbanNook.lng, place.lat, place.lng) <= 1.5;
-      else show = marker.placeType === type;
-
-      if (show) {
-        markerLayer.addLayer(marker);
-        nowFiltered.push(marker);
-      }
-    });
-
-    document.getElementById("status").textContent =
-      type === "all" ? "Showing all places." : `Showing ${nowFiltered.length} ${type} places.`;
-
-    setTimeout(() => map.invalidateSize(), 100);
-  }
-
-  function goHome() {
-    map.setView([urbanNook.lat, urbanNook.lng], 16);
-    homeMarker.openPopup();
-    document.getElementById("status").textContent = "Centred on Urban Nook.";
-  }
-
-  function handleGeoError(error) {
-    let message = "Location failed.";
-
-    if (error.code === 1) {
-      message = "Location permission denied. Allow location access for this website.";
-    } else if (error.code === 2) {
-      message = "Location unavailable. Turn on GPS/location services.";
-    } else if (error.code === 3) {
-      message = "Location timed out. Try again outdoors or near a window.";
-    }
-
-    alert(message);
-    document.getElementById("status").textContent = message;
-  }
-
-  function findMe() {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by this browser.");
-      return;
-    }
-
-    document.getElementById("status").textContent = "Finding your current location...";
-
-    navigator.geolocation.getCurrentPosition(pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const acc = pos.coords.accuracy;
-
-      lastUserLocation = { lat, lng };
-      map.setView([lat, lng], 16);
-
-      if (userMarker) map.removeLayer(userMarker);
-      if (userCircle) map.removeLayer(userCircle);
-
-      const shareLink = googleMapsLocationLink(lat, lng);
-
-      userMarker = L.marker([lat, lng]).addTo(map)
-        .bindPopup(`
-          <div class="popup-title">📍 You are here</div>
-          Accuracy: about ${Math.round(acc)}m<br><br>
-          <div class="popup-actions">
-            <a href="${shareLink}" target="_blank">Open</a>
-            <a class="search" href="#" onclick="copyText('${shareLink}'); return false;">Copy Link</a>
-          </div>
-        `)
-        .openPopup();
-
-      userCircle = L.circle([lat, lng], {
-        radius: acc,
-        color: "#2563eb",
-        fillColor: "#2563eb",
-        fillOpacity: 0.08
-      }).addTo(map);
-
-      document.getElementById("status").textContent = `Location found · ${Math.round(acc)}m accuracy.`;
-    }, handleGeoError, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-  }
-
-  function shareMyLocation() {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by this browser.");
-      return;
-    }
-
-    document.getElementById("status").textContent = "Getting shareable location link...";
-
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const link = googleMapsLocationLink(lat, lng);
-
-      lastUserLocation = { lat, lng };
-
-      if (navigator.share) {
-        try {
-          await navigator.share({ title: "My current location", text: "Here is my current location:", url: link });
-          document.getElementById("status").textContent = "Location shared.";
-        } catch (err) {
-          copyText(link);
+        if (!decisionMap[data.id]) {
+          decisionMap[data.id] = {
+            id: data.id,
+            title: data.title || "Untitled Question",
+            subtitle: data.subtitle || "",
+            active: data.active !== false,
+            order: data.order || Date.now(),
+            options: []
+          };
         }
-      } else {
-        copyText(link);
-      }
-    }, handleGeoError, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-  }
 
-  function copyText(text) {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => {
-        document.getElementById("status").textContent = "Location link copied.";
-        alert("Location link copied.");
+        decisionMap[data.id] = {
+          ...decisionMap[data.id],
+          ...data,
+          options: decisionMap[data.id].options || []
+        };
       });
-    } else {
-      prompt("Copy this link:", text);
-    }
+
+      decisions = Object.values(decisionMap);
+
+      decisions.forEach(decision => {
+        listenToOptions(decision.id);
+        listenToVotesForDecision(decision.id);
+        listenToFinalChoice(decision.id);
+      });
+
+      renderBoard();
+    });
   }
 
-  function openCheckpoint() {
-    window.open("https://www.woodlandscheckpoint.com/", "_blank");
-    document.getElementById("status").textContent = "Opened live checkpoint timing site.";
+  const optionListenersStarted = new Set();
+
+  function listenToOptions(decisionId) {
+    if (optionListenersStarted.has(decisionId)) return;
+    optionListenersStarted.add(decisionId);
+
+    const optionsRef = collection(db, "events", EVENT_ID, "decisionConfig", decisionId, "options");
+
+    onSnapshot(optionsRef, snapshot => {
+      const decision = decisions.find(d => d.id === decisionId);
+      if (!decision) return;
+
+      const defaultDecision = defaultDecisions.find(d => d.id === decisionId);
+      const optionMap = {};
+
+      if (defaultDecision) {
+        defaultDecision.options.forEach(option => {
+          optionMap[option.id] = { ...option };
+        });
+      }
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (!data.id) return;
+        optionMap[data.id] = { ...optionMap[data.id], ...data };
+      });
+
+      decision.options = Object.values(optionMap);
+      renderBoard();
+    });
+  }
+
+  const voteListenersStarted = new Set();
+
+  function listenToVotesForDecision(decisionId) {
+    const decision = decisions.find(d => d.id === decisionId);
+    if (!decision) return;
+
+    if (!voteCounts[decisionId]) voteCounts[decisionId] = {};
+
+    (decision.options || []).forEach(option => {
+      const listenerKey = `${decisionId}-${option.id}`;
+      if (voteListenersStarted.has(listenerKey)) return;
+      voteListenersStarted.add(listenerKey);
+
+      const ref = votePath(decisionId, option.id);
+
+      onSnapshot(ref, snapshot => {
+        voteCounts[decisionId][option.id] = snapshot.exists()
+          ? snapshot.data().count || 0
+          : 0;
+
+        renderBoard();
+        document.getElementById("status").textContent = "Votes synced.";
+      });
+    });
+  }
+
+  const finalChoiceListenersStarted = new Set();
+
+  function listenToFinalChoice(decisionId) {
+    if (finalChoiceListenersStarted.has(decisionId)) return;
+    finalChoiceListenersStarted.add(decisionId);
+
+    onSnapshot(finalPath(decisionId), snapshot => {
+      if (snapshot.exists()) finalChoices[decisionId] = snapshot.data();
+      else delete finalChoices[decisionId];
+
+      renderBoard();
+    });
+  }
+
+  function listenToEventSettings() {
+    onSnapshot(eventSettingsPath(), snapshot => {
+      if (snapshot.exists()) {
+        Object.assign(eventSettings, snapshot.data());
+      }
+
+      applyEventSettings();
+    });
   }
 
   window.vote = vote;
-  window.focusPlace = focusPlace;
-  window.decideForMe = decideForMe;
-  window.findMe = findMe;
-  window.shareMyLocation = shareMyLocation;
-  window.goHome = goHome;
-  window.filterMarkers = filterMarkers;
-  window.openCheckpoint = openCheckpoint;
-  window.copyText = copyText;
+  window.finaliseDecision = finaliseDecision;
+  window.resetMyVote = resetMyVote;
+  window.loginAdmin = loginAdmin;
+  window.saveEventSettings = saveEventSettings;
+  window.addDecision = addDecision;
+  window.editDecision = editDecision;
+  window.dropDecision = dropDecision;
+  window.addOption = addOption;
+  window.dropOption = dropOption;
 
-  updateTopPicks();
+  renderAdminState();
+  renderBoard();
+  listenToDecisionConfig();
+  listenToEventSettings();
 </script>
 </body>
 </html>
